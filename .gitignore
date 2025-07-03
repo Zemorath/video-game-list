@@ -1,0 +1,36 @@
+# Node.js/React build and dependency files
+node_modules/
+build/
+dist/
+*.log
+npm-debug.log*
+
+# Python virtual environment
+venv/
+__pycache__/
+*.pyc
+
+# API keys and sensitive files
+*.env
+!.env.example
+config.py
+secrets.py
+api_key.txt
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Local configuration files
+*.local
+settings/local.py
+
+# IDE and editor files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Database files (if using SQL locally)
+*.sqlite3
+*.db
