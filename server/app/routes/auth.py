@@ -73,7 +73,7 @@ def register():
         db.session.commit()
         
         # Create access token
-        access_token = create_access_token(identity=user.id)
+        access_token = create_access_token(identity=str(user.id))
         
         return jsonify({
             'success': True,
@@ -126,7 +126,7 @@ def login():
             }), 401
         
         # Create access token
-        access_token = create_access_token(identity=user.id)
+        access_token = create_access_token(identity=str(user.id))
         
         return jsonify({
             'success': True,
@@ -153,7 +153,7 @@ def login():
 def get_profile():
     """Get current user profile"""
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         user = User.query.get(user_id)
         
         if not user:
@@ -179,7 +179,7 @@ def get_profile():
 def verify_token():
     """Verify if token is valid"""
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         user = User.query.get(user_id)
         
         if not user or not user.is_active:

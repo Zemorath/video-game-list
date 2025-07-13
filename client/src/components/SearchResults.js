@@ -9,6 +9,8 @@ const SearchResults = () => {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [addedGames, setAddedGames] = useState(new Set()); // Track added games
+  const [showConfirmation, setShowConfirmation] = useState({}); // Track confirmation animations
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   
@@ -173,7 +175,16 @@ const SearchResults = () => {
       }
       
       if (response.success) {
-        alert(`"${game.name}" added to your collection!`);
+        // Add to added games set
+        setAddedGames(prev => new Set([...prev, game.guid]));
+        
+        // Show confirmation animation
+        setShowConfirmation(prev => ({ ...prev, [game.guid]: true }));
+        
+        // Hide confirmation after animation
+        setTimeout(() => {
+          setShowConfirmation(prev => ({ ...prev, [game.guid]: false }));
+        }, 2000);
       } else {
         alert(response.message || 'Failed to add game to collection');
       }
@@ -269,8 +280,17 @@ const SearchResults = () => {
             {games.map((game) => (
               <div
                 key={game.guid}
-                className="bg-card-bg rounded-xl overflow-hidden hover:bg-hover-gray transition-all duration-200 group"
+                className="bg-card-bg rounded-xl overflow-hidden hover:bg-hover-gray transition-all duration-200 group relative"
               >
+                {/* Added confirmation popup */}
+                {showConfirmation[game.guid] && (
+                  <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-20 animate-bounce-in">
+                    <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
+                      Added!
+                    </div>
+                  </div>
+                )}
+                
                 <div className="aspect-square bg-dark-secondary relative overflow-hidden">
                   {game.image ? (
                     <img
@@ -289,6 +309,15 @@ const SearchResults = () => {
                     </div>
                   )}
                   
+                  {/* Green checkmark for added games */}
+                  {addedGames.has(game.guid) && (
+                    <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1">
+                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                  
                   {/* Hover overlay with actions */}
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-75 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <div className="flex space-x-2">
@@ -300,9 +329,14 @@ const SearchResults = () => {
                       </button>
                       <button
                         onClick={() => addToCollection(game)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-sm transition-colors"
+                        disabled={addedGames.has(game.guid)}
+                        className={`px-3 py-1 rounded-lg text-sm transition-colors ${
+                          addedGames.has(game.guid)
+                            ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                            : 'bg-green-600 hover:bg-green-700 text-white'
+                        }`}
                       >
-                        Add
+                        {addedGames.has(game.guid) ? 'Added' : 'Add'}
                       </button>
                     </div>
                   </div>

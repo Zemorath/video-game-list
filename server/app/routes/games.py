@@ -95,7 +95,12 @@ class GameSearchSchema(Schema):
 
 class AddGameToLibrarySchema(Schema):
     game_guid = fields.Str(required=True)
-    status = fields.Str(missing='want_to_play', validate=lambda x: x in ['want_to_play', 'playing', 'completed', 'dropped'])
+    status = fields.Str(missing='want_to_play', validate=lambda x: x in ['want_to_play', 'playing', 'completed', 'dropped', 'collection'])
+
+class UpdateUserGameSchema(Schema):
+    status = fields.Str(validate=lambda x: x in ['want_to_play', 'playing', 'completed', 'dropped', 'collection'])
+    rating = fields.Int(validate=lambda x: x is None or (1 <= x <= 10), allow_none=True)
+    hours_played = fields.Float(validate=lambda x: x is None or x >= 0, allow_none=True)
 
 @games_bp.route('/search', methods=['GET'])
 def search_games():
@@ -158,7 +163,7 @@ def get_game_by_guid(game_guid):
 def get_user_library():
     """Get current user's game library"""
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         
         # Get user's games with game details
         user_games = UserGame.query.filter_by(user_id=user_id).all()
@@ -181,7 +186,7 @@ def get_user_library():
 def add_game_to_library():
     """Add game to user's library (for games already in database)"""
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         
         # Validate input data
         schema = AddGameToLibrarySchema()
@@ -213,7 +218,8 @@ def add_game_to_library():
         user_game = UserGame(
             user_id=user_id,
             game_id=game.id,
-            status=data['status']
+            status=data['status'],
+            image_url=game.image_url  # Store the image URL for quick access
         )
         
         db.session.add(user_game)
@@ -246,7 +252,7 @@ def add_game_to_library():
 def add_external_game_to_library():
     """Add game from external API (like Giant Bomb) to user's library"""
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         data = request.get_json()
         
         print("add-external called with data:", data)
@@ -288,7 +294,8 @@ def add_external_game_to_library():
         user_game = UserGame(
             user_id=user_id,
             game_id=game.id,
-            status=data.get('status', 'want_to_play')
+            status=data.get('status', 'want_to_play'),
+            image_url=game.image_url  # Store the image URL for quick access
         )
         
         db.session.add(user_game)
@@ -328,7 +335,7 @@ def add_external_game_to_library():
 def remove_game_from_library(user_game_id):
     """Remove game from user's library"""
     try:
-        user_id = get_jwt_identity()
+        user_id = int(get_jwt_identity())
         
         # Find the user's game entry
         user_game = UserGame.query.filter_by(id=user_game_id, user_id=user_id).first()
@@ -351,6 +358,65 @@ def remove_game_from_library(user_game_id):
         return jsonify({
             'success': False,
             'message': 'Failed to remove game from library',
+            'error': str(e)
+        }), 500
+
+@games_bp.route('/library/<int:user_game_id>', methods=['PUT'])
+@jwt_required()
+def update_user_game(user_game_id):
+    """Update user's game details (status, rating, hours_played)"""
+    try:
+        user_id = int(get_jwt_identity())
+        
+        # Validate input data
+        schema = UpdateUserGameSchema()
+        data = schema.load(request.get_json())
+        
+        # Find the user's game entry
+        user_game = UserGame.query.filter_by(id=user_game_id, user_id=user_id).first()
+        if not user_game:
+            return jsonify({
+                'success': False,
+                'message': 'Game not found in library'
+            }), 404
+        
+        # Update allowed fields
+        if 'status' in data:
+            user_game.status = data['status']
+        
+        if 'rating' in data:
+            user_game.rating = data['rating']
+        
+        if 'hours_played' in data:
+            user_game.hours_played = data['hours_played']
+        
+        # Update status-based dates
+        if 'status' in data:
+            from datetime import datetime
+            if data['status'] == 'playing' and not user_game.date_started:
+                user_game.date_started = datetime.utcnow()
+            elif data['status'] == 'completed' and not user_game.date_completed:
+                user_game.date_completed = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Game updated successfully',
+            'user_game': user_game.to_dict()
+        }), 200
+        
+    except ValidationError as e:
+        return jsonify({
+            'success': False,
+            'message': 'Validation error',
+            'errors': e.messages
+        }), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': 'Failed to update game',
             'error': str(e)
         }), 500
 

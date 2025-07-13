@@ -147,10 +147,11 @@ class UserGame(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     game_id = db.Column(db.Integer, db.ForeignKey('games.id'), nullable=False)
-    status = db.Column(db.String(20), default='want_to_play')  # want_to_play, playing, completed, dropped
+    status = db.Column(db.String(20), default='want_to_play', nullable=True)  # want_to_play, playing, completed, dropped
     rating = db.Column(db.Integer, nullable=True)  # 1-10 rating
     review = db.Column(db.Text, nullable=True)
     hours_played = db.Column(db.Float, nullable=True)
+    image_url = db.Column(db.String(500), nullable=True)  # Store game image for quick access
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
     date_started = db.Column(db.DateTime, nullable=True)
     date_completed = db.Column(db.DateTime, nullable=True)
@@ -168,6 +169,7 @@ class UserGame(db.Model):
             'rating': self.rating,
             'review': self.review,
             'hours_played': self.hours_played,
+            'image_url': self.image_url,
             'date_added': self.date_added.isoformat() if self.date_added else None,
             'date_started': self.date_started.isoformat() if self.date_started else None,
             'date_completed': self.date_completed.isoformat() if self.date_completed else None,

@@ -77,6 +77,11 @@ export const gamesAPI = {
     return response.data;
   },
 
+  updateUserGame: async (userGameId, updateData) => {
+    const response = await api.put(`/games/library/${userGameId}`, updateData);
+    return response.data;
+  },
+
   searchLocalGames: async (query, limit = 10) => {
     const response = await api.get(`/games/search?q=${encodeURIComponent(query)}&limit=${limit}`);
     return response.data;
