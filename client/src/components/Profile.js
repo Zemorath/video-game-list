@@ -1,39 +1,79 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { authAPI } from '../services/api';
+import { authAPI, gamesAPI } from '../services/api';
 
 const Profile = () => {
   const { user, logout } = useAuth();
   const [userProfile, setUserProfile] = useState(null);
+  const [gameStats, setGameStats] = useState({
+    totalGames: 0,
+    completed: 0,
+    playing: 0,
+    wantToPlay: 0,
+    collection: 0,
+    dropped: 0,
+    averageRating: 0,
+    totalHoursPlayed: 0
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       try {
-        const response = await authAPI.getProfile();
-        if (response.success) {
-          setUserProfile(response.user);
+        // Fetch profile data
+        const profileResponse = await authAPI.getProfile();
+        if (profileResponse.success) {
+          setUserProfile(profileResponse.user);
         } else {
           setError('Failed to load profile');
         }
+
+        // Fetch game library data to calculate statistics
+        const libraryResponse = await gamesAPI.getUserLibrary();
+        if (libraryResponse.success) {
+          const games = libraryResponse.library || [];
+          
+          // Calculate statistics
+          const stats = {
+            totalGames: games.length,
+            completed: games.filter(g => g.status === 'completed').length,
+            playing: games.filter(g => g.status === 'playing').length,
+            wantToPlay: games.filter(g => g.status === 'want_to_play').length,
+            collection: games.filter(g => g.status === 'collection').length,
+            dropped: games.filter(g => g.status === 'dropped').length,
+            averageRating: 0,
+            totalHoursPlayed: 0
+          };
+
+          // Calculate average rating (only for rated games)
+          const ratedGames = games.filter(g => g.rating && g.rating > 0);
+          if (ratedGames.length > 0) {
+            stats.averageRating = ratedGames.reduce((sum, g) => sum + g.rating, 0) / ratedGames.length;
+          }
+
+          // Calculate total hours played
+          stats.totalHoursPlayed = games.reduce((sum, g) => sum + (g.hours_played || 0), 0);
+
+          setGameStats(stats);
+        }
       } catch (err) {
         console.error('Profile fetch error:', err);
-        setError('Failed to load profile');
+        setError('Failed to load profile data');
       } finally {
         setLoading(false);
       }
     };
 
     if (user) {
-      fetchProfile();
+      fetchData();
     } else {
       setLoading(false);
     }
   }, [user]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
   };
 
   if (loading) {
@@ -61,9 +101,11 @@ const Profile = () => {
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-card-bg rounded-2xl p-6">
-          <h3 className="text-xl font-medium text-text-primary mb-4">Account Information</h3>
+      <div className="space-y-6">
+        {/* Account Information and Preferences Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-card-bg rounded-2xl p-6">
+            <h3 className="text-xl font-medium text-text-primary mb-4">Account Information</h3>
           <div className="space-y-3">
             <div>
               <label className="block text-text-secondary text-sm mb-1">Username</label>
@@ -111,25 +153,72 @@ const Profile = () => {
           </div>
         </div>
         
+        {/* Game Statistics - Full Width */}
         <div className="bg-card-bg rounded-2xl p-6">
           <h3 className="text-xl font-medium text-text-primary mb-4">Game Statistics</h3>
-          <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-text-secondary text-sm mb-1">Games in Library</label>
+              <label className="block text-text-secondary text-sm mb-1">Total Games</label>
               <div className="text-text-primary text-2xl font-bold">
-                {profileData?.game_count || 0}
+                {gameStats.totalGames}
               </div>
             </div>
             <div>
-              <label className="block text-text-secondary text-sm mb-1">Favorite Genres</label>
-              <div className="text-text-primary">Action, RPG, Adventure</div>
+              <label className="block text-text-secondary text-sm mb-1">Completed</label>
+              <div className="text-green-400 text-2xl font-bold">
+                {gameStats.completed}
+              </div>
             </div>
             <div>
-              <label className="block text-text-secondary text-sm mb-1">Most Played Platform</label>
-              <div className="text-text-primary">PC</div>
+              <label className="block text-text-secondary text-sm mb-1">Currently Playing</label>
+              <div className="text-blue-400 text-xl font-bold">
+                {gameStats.playing}
+              </div>
+            </div>
+            <div>
+              <label className="block text-text-secondary text-sm mb-1">Want to Play</label>
+              <div className="text-yellow-400 text-xl font-bold">
+                {gameStats.wantToPlay}
+              </div>
+            </div>
+            <div>
+              <label className="block text-text-secondary text-sm mb-1">Collection</label>
+              <div className="text-purple-400 text-xl font-bold">
+                {gameStats.collection}
+              </div>
+            </div>
+            <div>
+              <label className="block text-text-secondary text-sm mb-1">Dropped</label>
+              <div className="text-red-400 text-xl font-bold">
+                {gameStats.dropped}
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 pt-4 border-t border-dark-accent grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-text-secondary text-sm mb-1">Average Rating</label>
+              <div className="text-text-primary text-lg">
+                {gameStats.averageRating > 0 ? (
+                  <>⭐ {gameStats.averageRating.toFixed(1)}/10</>
+                ) : (
+                  'No ratings yet'
+                )}
+              </div>
+            </div>
+            <div>
+              <label className="block text-text-secondary text-sm mb-1">Total Hours Played</label>
+              <div className="text-text-primary text-lg">
+                {gameStats.totalHoursPlayed > 0 ? (
+                  <>🕒 {gameStats.totalHoursPlayed.toFixed(1)} hours</>
+                ) : (
+                  'No time logged'
+                )}
+              </div>
             </div>
           </div>
         </div>
+      </div>
         
         <div className="bg-card-bg rounded-2xl p-6">
           <h3 className="text-xl font-medium text-text-primary mb-4">Preferences</h3>

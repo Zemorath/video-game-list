@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode';
+import { authAPI } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -13,55 +13,68 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
-  // Check for existing token on app load
+  // Check for existing authentication on app load
   useEffect(() => {
-    const savedToken = localStorage.getItem('authToken');
-    if (savedToken) {
-      try {
-        const decoded = jwtDecode(savedToken);
-        // Check if token is expired
-        if (decoded.exp * 1000 > Date.now()) {
-          setToken(savedToken);
-          // You might want to fetch user data here or decode it from token
-          // For now, we'll set a basic user object
-          setUser({ id: decoded.sub || decoded.user_id || decoded.identity });
-        } else {
-          localStorage.removeItem('authToken');
-        }
-      } catch (error) {
-        console.error('Invalid token:', error);
-        localStorage.removeItem('authToken');
-      }
+    if (!hasCheckedAuth) {
+      checkAuthStatus();
     }
-    setLoading(false);
-  }, []);
+  }, [hasCheckedAuth]);
 
-  const login = (tokenData, userData) => {
-    setToken(tokenData);
-    setUser(userData);
-    localStorage.setItem('authToken', tokenData);
+  const checkAuthStatus = async () => {
+    try {
+      // Try to verify the token from the cookie
+      const response = await authAPI.verifyToken();
+      if (response.success) {
+        setUser(response.user);
+      } else {
+        setUser(null);
+      }
+    } catch (error) {
+      // If verification fails, user is not authenticated
+      console.log('Auth verification failed:', error.response?.status);
+      setUser(null);
+      
+      // Only redirect to login if we're not already there and it's a 401
+      if (error.response?.status === 401 && 
+          window.location.pathname !== '/login' && 
+          window.location.pathname !== '/register') {
+        window.location.href = '/login';
+      }
+    } finally {
+      setLoading(false);
+      setHasCheckedAuth(true);
+    }
   };
 
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('authToken');
+  const login = (userData) => {
+    setUser(userData);
+    setHasCheckedAuth(true); // Mark as checked to prevent re-checking
+  };
+
+  const logout = async () => {
+    try {
+      await authAPI.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+    }
   };
 
   const isAuthenticated = () => {
-    return !!token && !!user;
+    return !!user;
   };
 
   const value = {
     user,
-    token,
     loading,
     login,
     logout,
-    isAuthenticated
+    isAuthenticated,
+    checkAuthStatus
   };
 
   return (

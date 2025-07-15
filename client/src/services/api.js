@@ -5,31 +5,30 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api
 // Create axios instance with default config
 const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true, // Enable cookies
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Add token to requests if available
+// Add requests configuration (no CSRF token needed for development)
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
   return config;
 });
 
-// Handle token expiration
+// Handle responses - no automatic redirects
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('authToken');
-      window.location.href = '/login';
-    }
+    // Don't automatically redirect on 401 - let components handle it
     return Promise.reject(error);
   }
 );
+
+// Helper function for future CSRF implementation
+export const setCsrfToken = (token) => {
+  // Not used in development mode
+};
 
 export const authAPI = {
   register: async (userData) => {
@@ -49,6 +48,11 @@ export const authAPI = {
 
   verifyToken: async () => {
     const response = await api.get('/auth/verify-token');
+    return response.data;
+  },
+
+  logout: async () => {
+    const response = await api.post('/auth/logout');
     return response.data;
   }
 };

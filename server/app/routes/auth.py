@@ -1,5 +1,5 @@
-from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask import Blueprint, request, jsonify, make_response
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, unset_jwt_cookies
 from marshmallow import Schema, fields, ValidationError, validates, validates_schema
 from email_validator import validate_email, EmailNotValidError
 from app import db, bcrypt
@@ -75,12 +75,24 @@ def register():
         # Create access token
         access_token = create_access_token(identity=str(user.id))
         
-        return jsonify({
+        # Create response with cookie
+        response = make_response(jsonify({
             'success': True,
             'message': 'User registered successfully',
-            'access_token': access_token,
             'user': user.to_dict()
-        }), 201
+        }), 201)
+        
+        # Set the JWT cookie
+        response.set_cookie(
+            'access_token',
+            access_token,
+            max_age=30*24*60*60,  # 30 days
+            httponly=True,
+            secure=False,  # Set to True in production with HTTPS
+            samesite='Lax'
+        )
+        
+        return response
         
     except ValidationError as e:
         return jsonify({
@@ -128,12 +140,24 @@ def login():
         # Create access token
         access_token = create_access_token(identity=str(user.id))
         
-        return jsonify({
+        # Create response with cookie
+        response = make_response(jsonify({
             'success': True,
             'message': 'Login successful',
-            'access_token': access_token,
             'user': user.to_dict()
-        }), 200
+        }), 200)
+        
+        # Set the JWT cookie
+        response.set_cookie(
+            'access_token',
+            access_token,
+            max_age=30*24*60*60,  # 30 days
+            httponly=True,
+            secure=False,  # Set to True in production with HTTPS
+            samesite='Lax'
+        )
+        
+        return response
         
     except ValidationError as e:
         return jsonify({
@@ -174,7 +198,7 @@ def get_profile():
             'error': str(e)
         }), 500
 
-@auth_bp.route('/verify-token', methods=['POST'])
+@auth_bp.route('/verify-token', methods=['GET'])
 @jwt_required()
 def verify_token():
     """Verify if token is valid"""
@@ -198,3 +222,24 @@ def verify_token():
             'success': False,
             'message': 'Token verification failed'
         }), 401
+
+@auth_bp.route('/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    """Logout user and clear cookies"""
+    try:
+        response = make_response(jsonify({
+            'success': True,
+            'message': 'Logged out successfully'
+        }), 200)
+        
+        # Clear the JWT cookies
+        unset_jwt_cookies(response)
+        
+        return response
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': 'Logout failed'
+        }), 500
