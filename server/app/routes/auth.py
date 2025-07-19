@@ -4,7 +4,10 @@ from marshmallow import Schema, fields, ValidationError, validates, validates_sc
 from email_validator import validate_email, EmailNotValidError
 from app import db, bcrypt
 from app.models import User
+from app.utils.rate_limiter import rate_limit, auth_limiter
+from app.utils.bot_protection import bot_protection
 import re
+import time
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -52,12 +55,37 @@ class UserLoginSchema(Schema):
     password = fields.Str(required=True)
 
 @auth_bp.route('/register', methods=['POST'])
+@rate_limit(auth_limiter)
 def register():
-    """Register a new user"""
+    """Register a new user with bot protection"""
     try:
+        # Get client info
+        client_ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
+        user_agent = request.headers.get('User-Agent', '')
+        
+        # Get form data
+        json_data = request.get_json()
+        if not json_data:
+            return jsonify({
+                'success': False,
+                'message': 'No data provided'
+            }), 400
+        
+        # Bot protection validation
+        is_valid, bot_errors = bot_protection.validate_registration_form(
+            json_data, client_ip, user_agent
+        )
+        
+        if not is_valid:
+            return jsonify({
+                'success': False,
+                'message': 'Registration validation failed',
+                'errors': bot_errors
+            }), 400
+        
         # Validate input data
         schema = UserRegistrationSchema()
-        data = schema.load(request.get_json())
+        data = schema.load(json_data)
         
         # Create new user
         user = User(
@@ -109,6 +137,7 @@ def register():
         }), 500
 
 @auth_bp.route('/login', methods=['POST'])
+@rate_limit(auth_limiter)
 def login():
     """Login user"""
     try:
@@ -186,9 +215,13 @@ def get_profile():
                 'message': 'User not found'
             }), 404
         
+        profile_data = user.to_dict()
+        profile_data['follower_count'] = user.get_follower_count()
+        profile_data['following_count'] = user.get_following_count()
+        
         return jsonify({
             'success': True,
-            'user': user.to_dict()
+            'user': profile_data
         }), 200
         
     except Exception as e:

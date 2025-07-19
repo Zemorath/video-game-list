@@ -102,4 +102,48 @@ export const gamesAPI = {
   }
 };
 
+export const usersAPI = {
+  searchUsers: async (query, limit = 10) => {
+    const response = await api.get(`/users/search?q=${encodeURIComponent(query)}&limit=${limit}`);
+    return response.data;
+  },
+
+  getUserProfile: async (userId) => {
+    const response = await api.get(`/users/${userId}`);
+    return response.data;
+  },
+
+  followUser: async (userId) => {
+    const response = await api.post(`/users/${userId}/follow`);
+    return response.data;
+  },
+
+  unfollowUser: async (userId) => {
+    const response = await api.post(`/users/${userId}/unfollow`);
+    return response.data;
+  },
+
+  getMyFollowers: async () => {
+    const response = await api.get('/users/me/followers');
+    return response.data;
+  },
+
+  getMyFollowing: async () => {
+    const response = await api.get('/users/me/following');
+    return response.data;
+  }
+};
+
+export const youtubeAPI = {
+  getDailyReviews: async () => {
+    const response = await api.get('/youtube/daily-reviews');
+    return response.data;
+  },
+
+  refreshReviews: async () => {
+    const response = await api.post('/youtube/refresh-reviews');
+    return response.data;
+  }
+};
+
 export default api;

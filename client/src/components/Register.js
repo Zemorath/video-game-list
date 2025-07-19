@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -35,22 +35,40 @@ const RegisterSchema = Yup.object().shape({
 const Register = () => {
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [formTimestamp, setFormTimestamp] = useState(Date.now());
+  const [honeypotField, setHoneypotField] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Set form timestamp when component mounts
+    setFormTimestamp(Date.now() / 1000);
+    
+    // Generate honeypot field name
+    const timestamp = Date.now().toString();
+    const honeypotNames = ['company', 'phone_number', 'website_url', 'referrer'];
+    const fieldName = `${honeypotNames[parseInt(timestamp.slice(-1)) % honeypotNames.length]}_${timestamp.slice(-4)}`;
+    setHoneypotField(fieldName);
+  }, []);
 
   const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
     setIsLoading(true);
     setApiError('');
 
     try {
-      const response = await authAPI.register({
+      const registrationData = {
         username: values.username,
         email: values.email,
         password: values.password,
         confirm_password: values.confirmPassword,
         first_name: values.firstName || null,
         last_name: values.lastName || null,
-      });
+        form_timestamp: formTimestamp,
+        honeypot_field: honeypotField,
+        [honeypotField]: values[honeypotField] || '' // Include honeypot value
+      };
+
+      const response = await authAPI.register(registrationData);
 
       if (response.success) {
         login(response.user);
@@ -250,6 +268,20 @@ const Register = () => {
                   />
                 </div>
               </div>
+
+              {/* Honeypot field - hidden from users, should not be filled */}
+              {honeypotField && (
+                <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }}>
+                  <label htmlFor={honeypotField}>Leave this field empty</label>
+                  <Field
+                    id={honeypotField}
+                    name={honeypotField}
+                    type="text"
+                    tabIndex="-1"
+                    autoComplete="off"
+                  />
+                </div>
+              )}
 
               {apiError && (
                 <div className="bg-red-900/20 border border-red-500 text-red-400 px-4 py-3 rounded-lg">

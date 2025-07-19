@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { youtubeAPI } from '../services/api';
+import { youtubeAPI, upcomingGamesAPI } from '../services/api';
 
 const Home = () => {
   const [videos, setVideos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [upcomingGames, setUpcomingGames] = useState([]);
+  const [videosLoading, setVideosLoading] = useState(true);
+  const [gamesLoading, setGamesLoading] = useState(true);
+  const [videosError, setVideosError] = useState('');
+  const [gamesError, setGamesError] = useState('');
   const [selectedVideo, setSelectedVideo] = useState(null);
+  const [activeTab, setActiveTab] = useState('reviews'); // 'reviews' or 'upcoming'
 
   useEffect(() => {
     const fetchDailyReviews = async () => {
@@ -14,17 +18,34 @@ const Home = () => {
         if (response.success) {
           setVideos(response.videos);
         } else {
-          setError(response.message || 'Failed to load videos');
+          setVideosError(response.message || 'Failed to load videos');
         }
       } catch (error) {
         console.error('Failed to fetch videos:', error);
-        setError('Failed to load daily reviews');
+        setVideosError('Failed to load daily reviews');
       } finally {
-        setLoading(false);
+        setVideosLoading(false);
+      }
+    };
+
+    const fetchUpcomingGames = async () => {
+      try {
+        const response = await upcomingGamesAPI.getUpcomingGames();
+        if (response.success) {
+          setUpcomingGames(response.games);
+        } else {
+          setGamesError(response.message || 'Failed to load upcoming games');
+        }
+      } catch (error) {
+        console.error('Failed to fetch upcoming games:', error);
+        setGamesError('Failed to load upcoming games');
+      } finally {
+        setGamesLoading(false);
       }
     };
 
     fetchDailyReviews();
+    fetchUpcomingGames();
   }, []);
 
   const openVideoModal = (video) => {
@@ -78,7 +99,7 @@ const Home = () => {
           <div className="text-center py-12">
             <div className="text-text-secondary">
               <svg className="w-12 h-12 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 002 2v8a2 2 0 002 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
               <p className="text-text-secondary">{error}</p>
               <p className="text-text-secondary text-sm mt-2">
@@ -90,7 +111,7 @@ const Home = () => {
           <div className="text-center py-12">
             <div className="text-text-secondary">
               <svg className="w-12 h-12 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 002 2v8a2 2 0 002 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
               <p>No gaming reviews available today</p>
               <p className="text-sm mt-2">Check back tomorrow for fresh content!</p>
@@ -104,7 +125,7 @@ const Home = () => {
                 className="bg-dark-secondary rounded-xl overflow-hidden hover:bg-dark-secondary/80 transition-colors cursor-pointer"
                 onClick={() => openVideoModal(video)}
               >
-                {/* Video thumbnail */}
+                {/* Thumbnail */}
                 <div className="relative aspect-video">
                   <img
                     src={video.thumbnail}
@@ -119,11 +140,17 @@ const Home = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Video Info */}
                 <div className="p-4">
-                  <h3 className="font-medium text-text-primary mb-2 line-clamp-2">{video.title}</h3>
-                  <p className="text-sm text-text-secondary mb-3 line-clamp-2">{video.description}</p>
+                  <h3 className="font-medium text-text-primary mb-2 line-clamp-2">
+                    {video.title}
+                  </h3>
+                  <p className="text-text-secondary text-sm mb-2">
+                    {video.channel_title}
+                  </p>
                   <div className="flex items-center justify-between text-xs text-text-secondary">
-                    <span>{video.channel_title}</span>
+                    <span>{video.view_count?.toLocaleString()} views</span>
                     <span>{new Date(video.published_at).toLocaleDateString()}</span>
                   </div>
                 </div>
@@ -135,9 +162,10 @@ const Home = () => {
 
       {/* Video Modal */}
       {selectedVideo && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
           <div className="bg-dark-primary rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-dark-secondary">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-dark-accent">
               <h3 className="text-lg font-medium text-text-primary line-clamp-1">
                 {selectedVideo.title}
               </h3>
@@ -150,24 +178,41 @@ const Home = () => {
                 </svg>
               </button>
             </div>
+
+            {/* Video Player */}
             <div className="aspect-video">
               <iframe
                 src={selectedVideo.embed_url}
                 title={selectedVideo.title}
                 className="w-full h-full"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-              />
+              ></iframe>
             </div>
+
+            {/* Video Details */}
             <div className="p-4">
-              <p className="text-text-secondary text-sm mb-2">{selectedVideo.description}</p>
-              <div className="flex items-center justify-between text-xs text-text-secondary">
-                <span>{selectedVideo.channel_title}</span>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-text-secondary text-sm">{selectedVideo.channel_title}</span>
+                <div className="flex space-x-4 text-xs text-text-secondary">
+                  <span>{selectedVideo.view_count?.toLocaleString()} views</span>
+                  <span>{selectedVideo.like_count?.toLocaleString()} likes</span>
+                </div>
+              </div>
+              <p className="text-text-secondary text-sm">
+                {selectedVideo.description}
+              </p>
+              <div className="mt-4">
                 <a
                   href={selectedVideo.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-accent-primary hover:text-accent-primary/80 transition-colors"
+                  className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm"
                 >
+                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  </svg>
                   Watch on YouTube
                 </a>
               </div>

@@ -138,6 +138,23 @@ const Profile = () => {
                 {profileData?.is_active ? 'Active' : 'Inactive'}
               </div>
             </div>
+            <div className="pt-2 border-t border-dark-accent">
+              <label className="block text-text-secondary text-sm mb-2">Social Stats</label>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-text-primary text-lg font-semibold">
+                    {profileData?.follower_count || 0}
+                  </div>
+                  <div className="text-text-secondary text-xs">Followers</div>
+                </div>
+                <div>
+                  <div className="text-text-primary text-lg font-semibold">
+                    {profileData?.following_count || 0}
+                  </div>
+                  <div className="text-text-secondary text-xs">Following</div>
+                </div>
+              </div>
+            </div>
           </div>
           
           <div className="mt-6 pt-6 border-t border-dark-accent">

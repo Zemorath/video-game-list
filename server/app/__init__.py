@@ -47,9 +47,21 @@ def create_app():
     # Register blueprints
     from app.routes.auth import auth_bp
     from app.routes.games import games_bp
+    from app.routes.users import users_bp
+    from app.routes.youtube import youtube_bp
+    from app.routes.admin import admin_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(games_bp, url_prefix='/api/games')
+    app.register_blueprint(users_bp, url_prefix='/api/users')
+    app.register_blueprint(youtube_bp, url_prefix='/api/youtube')
+    app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    
+    # Add rate limit headers to all responses
+    from app.utils.rate_limiter import add_rate_limit_headers
+    from app.utils.security_headers import add_security_headers
+    app.after_request(add_rate_limit_headers)
+    app.after_request(add_security_headers)
     
     # Create database tables
     with app.app_context():

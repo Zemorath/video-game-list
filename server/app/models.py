@@ -39,6 +39,49 @@ class User(db.Model):
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
     
+    def to_public_dict(self):
+        """Convert user object to public dictionary (no email, less info)"""
+        return {
+            'id': self.id,
+            'username': self.username,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+    
+    def get_follower_count(self):
+        """Get number of followers"""
+        from app.models import Follow  # Import here to avoid circular import
+        return Follow.query.filter_by(followed_id=self.id).count()
+    
+    def get_following_count(self):
+        """Get number of users this user is following"""
+        from app.models import Follow
+        return Follow.query.filter_by(follower_id=self.id).count()
+    
+    def is_following(self, user):
+        """Check if this user is following another user"""
+        from app.models import Follow
+        return Follow.query.filter_by(follower_id=self.id, followed_id=user.id).first() is not None
+    
+    def follow(self, user):
+        """Follow another user"""
+        if not self.is_following(user) and self.id != user.id:
+            from app.models import Follow
+            follow = Follow(follower_id=self.id, followed_id=user.id)
+            db.session.add(follow)
+            return True
+        return False
+    
+    def unfollow(self, user):
+        """Unfollow another user"""
+        from app.models import Follow
+        follow = Follow.query.filter_by(follower_id=self.id, followed_id=user.id).first()
+        if follow:
+            db.session.delete(follow)
+            return True
+        return False
+    
     def __repr__(self):
         return f'<User {self.username}>'
 
@@ -178,3 +221,33 @@ class UserGame(db.Model):
     
     def __repr__(self):
         return f'<UserGame {self.user_id}:{self.game_id}>'
+
+
+class Follow(db.Model):
+    __tablename__ = 'follows'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    follower_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    followed_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    follower = db.relationship('User', foreign_keys=[follower_id], backref='following')
+    followed = db.relationship('User', foreign_keys=[followed_id], backref='followers')
+    
+    # Ensure a user can't follow the same person twice
+    __table_args__ = (db.UniqueConstraint('follower_id', 'followed_id', name='unique_follow'),)
+    
+    def to_dict(self):
+        """Convert follow relationship to dictionary"""
+        return {
+            'id': self.id,
+            'follower_id': self.follower_id,
+            'followed_id': self.followed_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'follower': self.follower.to_dict() if self.follower else None,
+            'followed': self.followed.to_dict() if self.followed else None
+        }
+    
+    def __repr__(self):
+        return f'<Follow {self.follower_id} -> {self.followed_id}>'

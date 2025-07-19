@@ -5,10 +5,13 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Home from './components/Home';
 import Library from './components/Library';
 import Profile from './components/Profile';
+import Users from './components/Users';
+import UserProfile from './components/UserProfile';
 import Login from './components/Login';
 import Register from './components/Register';
 import GameDetail from './components/GameDetail';
 import SearchResults from './components/SearchResults';
+import Footer from './components/Footer';
 import './styles/App.css';
 
 function AppContent() {
@@ -49,6 +52,15 @@ function AppContent() {
                 {/* Three horizontal bars */}
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                </svg>
+              </div>
+            </Link>
+            
+            <Link to="/users" className="group relative">
+              <div className="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors duration-200">
+                {/* Users Icon */}
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16 4c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c2.67 0 8 1.34 8 4v2h-8v-2c0-.71-.71-1.38-1.71-1.93C14.95 13.22 15.46 12 16 12zM8 4c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4zm0 2C6.9 6 6 6.9 6 8s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c2.67 0 8 1.34 8 4v2H0v-2c0-2.66 5.33-4 8-4z"/>
                 </svg>
               </div>
             </Link>
@@ -135,6 +147,22 @@ function AppContent() {
               } 
             />
             <Route 
+              path="/users" 
+              element={
+                <ProtectedRoute>
+                  <Users />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/users/:userId" 
+              element={
+                <ProtectedRoute>
+                  <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/profile" 
               element={
                 <ProtectedRoute>
@@ -144,6 +172,9 @@ function AppContent() {
             />
           </Routes>
         </div>
+        
+        {/* Footer */}
+        <Footer />
       </div>
     </div>
   );
