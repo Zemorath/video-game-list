@@ -24,10 +24,14 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///game_library.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
+    # Production settings
+    is_production = os.getenv('FLASK_ENV') == 'production'
+    
     # JWT Cookie Configuration for security
     app.config['JWT_TOKEN_LOCATION'] = ['cookies']
     app.config['JWT_ACCESS_COOKIE_NAME'] = 'access_token'
-    app.config['JWT_COOKIE_SECURE'] = os.getenv('FLASK_ENV') == 'production'  # HTTPS only in production
+    app.config['JWT_COOKIE_SECURE'] = is_production  # HTTPS only in production
+    app.config['JWT_COOKIE_SAMESITE'] = 'Lax' if is_production else None
     app.config['JWT_COOKIE_HTTPONLY'] = True  # Prevent XSS attacks
     app.config['JWT_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)  # 30 day expiration
