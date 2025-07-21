@@ -29,7 +29,7 @@ frontend:
           value: 'strict-origin-when-cross-origin'
   environment:
     variables:
-      REACT_APP_API_URL: 'http://gamelist-env.eba-tku47f7i.us-east-1.elasticbeanstalk.com/api'
+      REACT_APP_API_URL: '/api'
       REACT_APP_GIANT_BOMB_API_KEY: 'your-giant-bomb-api-key'
       REACT_APP_GIANT_BOMB_API_URL: 'https://www.giantbomb.com/api'
       CI: 'true'

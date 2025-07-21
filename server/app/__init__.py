@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
+from werkzeug.middleware.proxy_fix import ProxyFix
 from dotenv import load_dotenv
 import os
 from datetime import timedelta
@@ -17,6 +18,9 @@ bcrypt = Bcrypt()
 
 def create_app():
     app = Flask(__name__)
+    
+    # Add ProxyFix to handle headers from load balancer
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
     
     # Configuration
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
@@ -60,6 +64,12 @@ def create_app():
     app.register_blueprint(users_bp, url_prefix='/api/users')
     app.register_blueprint(youtube_bp, url_prefix='/api/youtube')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    
+    # Health check endpoint for load balancer
+    @app.route('/')
+    @app.route('/health')
+    def health_check():
+        return {'status': 'healthy', 'service': 'game-list-api'}, 200
     
     # Add rate limit headers to all responses
     from app.utils.rate_limiter import add_rate_limit_headers

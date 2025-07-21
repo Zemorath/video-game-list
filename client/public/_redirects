@@ -1,0 +1,2 @@
+/api/* http://gamelist-env.eba-tku47f7i.us-east-1.elasticbeanstalk.com/api/:splat 200
+/* /index.html 200
