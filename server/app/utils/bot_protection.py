@@ -5,12 +5,15 @@ from datetime import datetime, timedelta
 from flask import request
 import json
 import os
+import tempfile
 
 class BotProtection:
     def __init__(self):
         self.suspicious_ips = {}
         self.honeypot_hits = {}
-        self.storage_file = 'bot_protection.json'
+        # Use temp directory for file storage to avoid permission issues
+        temp_dir = tempfile.gettempdir()
+        self.storage_file = os.path.join(temp_dir, 'bot_protection.json')
         self.load_storage()
     
     def load_storage(self):

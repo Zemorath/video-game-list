@@ -3,15 +3,21 @@ from flask import request, jsonify, g
 from datetime import datetime, timedelta
 import json
 import os
+import tempfile
 
 # In-memory rate limiting storage (in production, use Redis)
 rate_limit_storage = {}
 
 class RateLimiter:
-    def __init__(self, max_requests=10, window_minutes=1, storage_file='rate_limits.json'):
+    def __init__(self, max_requests=10, window_minutes=1, storage_file=None):
         self.max_requests = max_requests
         self.window_minutes = window_minutes
-        self.storage_file = storage_file
+        # Use temp directory for file storage to avoid permission issues
+        if storage_file is None:
+            temp_dir = tempfile.gettempdir()
+            self.storage_file = os.path.join(temp_dir, 'rate_limits.json')
+        else:
+            self.storage_file = storage_file
         self.load_storage()
     
     def load_storage(self):
