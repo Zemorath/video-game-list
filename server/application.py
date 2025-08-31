@@ -1,19 +1,8 @@
-# Ultra minimal WSGI app for EB
-def application(environ, start_response):
-    """Raw WSGI application - no dependencies"""
-    path = environ.get('PATH_INFO', '/')
-    
-    if path in ['/', '/health']:
-        status = '200 OK'
-        response_body = b'OK - Working!'
-    else:
-        status = '404 Not Found'
-        response_body = b'Not Found'
-    
-    headers = [
-        ('Content-Type', 'text/plain'),
-        ('Content-Length', str(len(response_body)))
-    ]
-    
-    start_response(status, headers)
-    return [response_body]
+from app import create_app
+
+# EB looks for 'application' by default, Railway looks for 'app'
+application = create_app()
+app = application  # Railway compatibility
+
+if __name__ == "__main__":
+    application.run(debug=False)
