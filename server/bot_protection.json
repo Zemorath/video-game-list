@@ -1,1 +1,0 @@
-{"suspicious_ips": {"127.0.0.1": [{"timestamp": "2025-07-19T21:17:40.874434", "reason": "Suspicious user agent"}, {"timestamp": "2025-07-19T21:17:40.874717", "reason": "Suspicious email pattern"}, {"timestamp": "2025-07-19T21:17:49.019108", "reason": "Suspicious email pattern"}]}, "honeypot_hits": {}}
