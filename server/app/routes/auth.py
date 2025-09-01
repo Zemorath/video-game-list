@@ -116,7 +116,7 @@ def register():
             access_token,
             max_age=30*24*60*60,  # 30 days
             httponly=True,
-            secure=False,  # Set to True in production with HTTPS
+            secure=True,  # Set to True in production with HTTPS
             samesite='Lax'
         )
         
@@ -182,7 +182,7 @@ def login():
             access_token,
             max_age=30*24*60*60,  # 30 days
             httponly=True,
-            secure=False,  # Set to True in production with HTTPS
+            secure=True,  # Set to True in production with HTTPS
             samesite='Lax'
         )
         
