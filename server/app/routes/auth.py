@@ -55,6 +55,11 @@ class UserRegistrationSchema(Schema):
     first_name = fields.Str(required=False, allow_none=True, validate=lambda x: len(x.strip()) <= 50 if x else True)
     last_name = fields.Str(required=False, allow_none=True, validate=lambda x: len(x.strip()) <= 50 if x else True)
     
+    # Bot protection fields (optional, will be processed separately)
+    form_timestamp = fields.Float(required=False, allow_none=True)
+    honeypot_field = fields.Str(required=False, allow_none=True)
+    phone_number_2321 = fields.Str(required=False, allow_none=True)
+    
     @validates('username')
     def validate_username(self, value):
         if not re.match(r'^[a-zA-Z0-9_]+$', value.strip()):
