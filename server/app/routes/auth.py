@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, make_response
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, unset_jwt_cookies
-from marshmallow import Schema, fields, ValidationError, validates, validates_schema
+from marshmallow import Schema, fields, ValidationError, validates, validates_schema, EXCLUDE
 from email_validator import validate_email, EmailNotValidError
 from app import db, bcrypt
 from app.models import User
@@ -48,6 +48,9 @@ def test_register():
         }), 500
 
 class UserRegistrationSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE  # This will ignore unknown fields instead of raising an error
+    
     username = fields.Str(required=True, validate=lambda x: len(x.strip()) >= 3)
     email = fields.Email(required=True)
     password = fields.Str(required=True, validate=lambda x: len(x) >= 8)
@@ -58,7 +61,6 @@ class UserRegistrationSchema(Schema):
     # Bot protection fields (optional, will be processed separately)
     form_timestamp = fields.Float(required=False, allow_none=True)
     honeypot_field = fields.Str(required=False, allow_none=True)
-    phone_number_2321 = fields.Str(required=False, allow_none=True)
     
     @validates('username')
     def validate_username(self, value):
