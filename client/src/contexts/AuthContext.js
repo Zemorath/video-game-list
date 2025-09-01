@@ -37,12 +37,16 @@ export const AuthProvider = ({ children }) => {
       console.log('Auth verification failed:', error.response?.status);
       setUser(null);
       
+      // Temporarily disable automatic redirect to debug the issue
+      // TODO: Re-enable once API connection is stable
+      /*
       // Only redirect to login if we're not already there and it's a 401
       if (error.response?.status === 401 && 
           window.location.pathname !== '/login' && 
           window.location.pathname !== '/register') {
         window.location.href = '/login';
       }
+      */
     } finally {
       setLoading(false);
       setHasCheckedAuth(true);
