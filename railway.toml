@@ -1,0 +1,10 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+healthcheckPath = "/api/health"
+
+# Mount a volume to persist SQLite database
+[[volumes]]
+name = "database"
+mountPath = "/app/server/instance"
