@@ -13,15 +13,14 @@ __pycache__/
 # API keys and sensitive files
 *.env
 !.env.example
-!.env.production
+!.env.local
 config.py
 secrets.py
 api_key.txt
 
-# AWS deployment files
+# AWS/Legacy deployment files (cleaned up)
 .aws-sam/
 .elasticbeanstalk/
-!.ebextensions/
 amplify/backend/awscloudformation/
 amplify/.config/
 amplify/mock-data/

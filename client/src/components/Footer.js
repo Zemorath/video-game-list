@@ -30,7 +30,7 @@ const Footer = () => {
             <h3 className="text-lg font-medium text-text-primary mb-4">Connect</h3>
             <div className="space-y-2 text-text-secondary text-sm">
               <p>Built for gamers, by gamers</p>
-              <p>Powered by RAWG API & YouTube</p>
+              <p>Powered by RAWG API, Giant Bomb API & YouTube</p>
             </div>
           </div>
         </div>

@@ -166,6 +166,17 @@ const Profile = () => {
               >
                 Sign Out
               </button>
+              <button
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to delete your account? This action cannot be undone and will permanently remove all your data.')) {
+                    // TODO: Implement account deletion
+                    alert('Account deletion feature will be implemented soon.');
+                  }
+                }}
+                className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-colors border border-gray-600"
+              >
+                Delete Account
+              </button>
             </div>
           </div>
         </div>
