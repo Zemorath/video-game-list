@@ -11,6 +11,42 @@ import time
 
 auth_bp = Blueprint('auth', __name__)
 
+# Temporary test endpoint for debugging
+@auth_bp.route('/test-register', methods=['POST'])
+def test_register():
+    """Test registration without bot protection for debugging"""
+    try:
+        json_data = request.get_json()
+        print(f"Test registration data: {json_data}")
+        
+        if not json_data:
+            return jsonify({'success': False, 'message': 'No data provided'}), 400
+            
+        # Just validate the schema without bot protection
+        schema = UserRegistrationSchema()
+        data = schema.load(json_data)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Validation passed (test endpoint)',
+            'data': data
+        }), 200
+        
+    except ValidationError as e:
+        print(f"Test validation error: {e.messages}")
+        return jsonify({
+            'success': False,
+            'message': 'Validation error',
+            'errors': e.messages
+        }), 400
+    except Exception as e:
+        print(f"Test registration error: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'Test failed',
+            'error': str(e)
+        }), 500
+
 class UserRegistrationSchema(Schema):
     username = fields.Str(required=True, validate=lambda x: len(x.strip()) >= 3)
     email = fields.Email(required=True)
@@ -65,7 +101,10 @@ def register():
         
         # Get form data
         json_data = request.get_json()
+        print(f"Registration attempt from {client_ip} with data: {json_data}")
+        
         if not json_data:
+            print("No JSON data provided in registration request")
             return jsonify({
                 'success': False,
                 'message': 'No data provided'
@@ -77,6 +116,7 @@ def register():
         )
         
         if not is_valid:
+            print(f"Bot protection failed: {bot_errors}")
             return jsonify({
                 'success': False,
                 'message': 'Registration validation failed',
@@ -123,12 +163,14 @@ def register():
         return response
         
     except ValidationError as e:
+        print(f"Validation error in registration: {e.messages}")
         return jsonify({
             'success': False,
             'message': 'Validation error',
             'errors': e.messages
         }), 400
     except Exception as e:
+        print(f"Registration error: {str(e)}")
         db.session.rollback()
         return jsonify({
             'success': False,
