@@ -91,12 +91,13 @@ class BotProtection:
         if not re.match(email_pattern, email):
             return False
         
-        # Check for suspicious patterns
+        # Check for truly suspicious patterns (made less restrictive)
         suspicious_patterns = [
-            r'^\w+\d+@',  # username followed by numbers
             r'test.*@',    # test emails
             r'temp.*@',    # temporary emails
-            r'^\d+@',      # emails starting with numbers
+            r'^\d{10,}@',  # emails starting with many numbers (10+)
+            r'@fake',      # fake domains
+            r'@temp',      # temporary domains
         ]
         
         for pattern in suspicious_patterns:
