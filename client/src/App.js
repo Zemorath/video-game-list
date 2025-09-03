@@ -24,6 +24,9 @@ function AppContent() {
       // Navigate to search results page
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery(''); // Clear search after navigating
+      
+      // Blur the input to close mobile keyboard
+      e.target.blur();
     }
   };
 
@@ -178,7 +181,7 @@ function AppContent() {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleSearch}
               placeholder="Search for games and press Enter..."
-              className="w-[280px] sm:w-[400px] lg:w-[500px] px-4 py-2 lg:px-6 lg:py-3 bg-card-bg text-text-primary placeholder-text-secondary border border-accent-gray rounded-xl focus:outline-none focus:border-text-secondary transition-colors duration-200 text-center text-sm lg:text-base"
+              className="w-[280px] sm:w-[400px] lg:w-[500px] px-4 py-2 lg:px-6 lg:py-3 bg-card-bg text-text-primary placeholder-text-secondary border border-accent-gray rounded-xl focus:outline-none focus:border-text-secondary transition-colors duration-200 text-center text-base"
             />
             {searchQuery.length > 0 && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-secondary text-xs lg:text-sm">
