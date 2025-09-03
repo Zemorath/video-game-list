@@ -46,11 +46,60 @@ const GameDetail = () => {
   };
 
   const formatPlatforms = (platforms) => {
-    if (!platforms || platforms.length === 0) return 'Not specified';
+    if (!platforms || platforms.length === 0) {
+      return 'Not specified';
+    }
     return platforms.map(platform => platform.name).join(', ');
   };
 
-  if (loading) {
+  const extractOverview = (description) => {
+    if (!description) return null;
+    
+    // Create a temporary div to parse HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = description;
+    
+    // Look for Overview section in various formats
+    const headings = tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6, strong, b');
+    
+    for (let i = 0; i < headings.length; i++) {
+      const heading = headings[i];
+      const headingText = heading.textContent.toLowerCase().trim();
+      
+      // Check if this heading contains "overview"
+      if (headingText.includes('overview')) {
+        // Find content after this heading until the next heading or end
+        let content = '';
+        let currentElement = heading.nextSibling;
+        
+        while (currentElement) {
+          // Stop if we hit another heading
+          if (currentElement.nodeType === 1 && // Element node
+              ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(currentElement.tagName)) {
+            break;
+          }
+          
+          // Add text content or HTML
+          if (currentElement.nodeType === 1) { // Element node
+            content += currentElement.outerHTML;
+          } else if (currentElement.nodeType === 3) { // Text node
+            const text = currentElement.textContent.trim();
+            if (text) content += text;
+          }
+          
+          currentElement = currentElement.nextSibling;
+        }
+        
+        // Return cleaned content if we found something substantial
+        if (content.trim().length > 20) {
+          return content.trim();
+        }
+      }
+    }
+    
+    // If no Overview section found, return null
+    return null;
+  };  if (loading) {
     return (
       <div className="max-w-6xl mx-auto flex items-center justify-center min-h-96">
         <div className="text-center">
@@ -154,15 +203,18 @@ const GameDetail = () => {
       </div>
 
       {/* Game Description */}
-      {game.description && (
-        <div className="bg-card-bg rounded-2xl p-8">
-          <h2 className="text-2xl font-light text-text-primary mb-6">About This Game</h2>
-          <div 
-            className="text-text-secondary leading-relaxed prose prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: game.description }}
-          />
-        </div>
-      )}
+      {game.description && (() => {
+        const overviewContent = extractOverview(game.description);
+        return overviewContent ? (
+          <div className="bg-card-bg rounded-2xl p-8">
+            <h2 className="text-2xl font-light text-text-primary mb-6">About This Game</h2>
+            <div 
+              className="text-text-secondary leading-relaxed prose prose-invert max-w-none"
+              dangerouslySetInnerHTML={{ __html: overviewContent }}
+            />
+          </div>
+        ) : null;
+      })()}
     </div>
   );
 };
