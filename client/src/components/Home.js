@@ -36,36 +36,36 @@ const Home = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-4 lg:py-8">
       {/* Welcome Section */}
-      <div className="mb-12 text-center">
-        <h1 className="text-4xl font-light text-text-primary mb-4">Welcome to Your Game Library</h1>
-        <p className="text-lg text-text-secondary font-light">Discover, organize, and track your gaming journey.</p>
+      <div className="mb-8 lg:mb-12 text-center">
+        <h1 className="text-2xl lg:text-4xl font-light text-text-primary mb-4">Welcome to Your Game Library</h1>
+        <p className="text-base lg:text-lg text-text-secondary font-light">Discover, organize, and track your gaming journey.</p>
       </div>
       
       {/* Quick Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <div className="bg-card-bg rounded-2xl p-6 hover:bg-card-bg/80 transition-colors duration-200">
-          <h3 className="text-xl font-medium text-text-primary mb-2">Recent Games</h3>
-          <p className="text-text-secondary">View your recently added games</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6 mb-8 lg:mb-12">
+        <div className="bg-card-bg rounded-2xl p-4 lg:p-6 hover:bg-card-bg/80 transition-colors duration-200">
+          <h3 className="text-lg lg:text-xl font-medium text-text-primary mb-2">Recent Games</h3>
+          <p className="text-sm lg:text-base text-text-secondary">View your recently added games</p>
         </div>
         
-        <div className="bg-card-bg rounded-2xl p-6 hover:bg-card-bg/80 transition-colors duration-200">
-          <h3 className="text-xl font-medium text-text-primary mb-2">Statistics</h3>
-          <p className="text-text-secondary">Track your gaming progress</p>
+        <div className="bg-card-bg rounded-2xl p-4 lg:p-6 hover:bg-card-bg/80 transition-colors duration-200">
+          <h3 className="text-lg lg:text-xl font-medium text-text-primary mb-2">Statistics</h3>
+          <p className="text-sm lg:text-base text-text-secondary">Track your gaming progress</p>
         </div>
         
-        <div className="bg-card-bg rounded-2xl p-6 hover:bg-card-bg/80 transition-colors duration-200">
-          <h3 className="text-xl font-medium text-text-primary mb-2">Community</h3>
-          <p className="text-text-secondary">Connect with other gamers</p>
+        <div className="bg-card-bg rounded-2xl p-4 lg:p-6 hover:bg-card-bg/80 transition-colors duration-200">
+          <h3 className="text-lg lg:text-xl font-medium text-text-primary mb-2">Community</h3>
+          <p className="text-sm lg:text-base text-text-secondary">Connect with other gamers</p>
         </div>
       </div>
 
       {/* Daily Gaming Reviews Section */}
-      <div className="bg-card-bg rounded-2xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-text-primary">Daily Gaming Reviews</h2>
-          <span className="text-text-secondary text-sm">
+      <div className="bg-card-bg rounded-2xl p-4 lg:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 lg:mb-6">
+          <h2 className="text-xl lg:text-2xl font-semibold text-text-primary mb-2 sm:mb-0">Daily Gaming Reviews</h2>
+          <span className="text-text-secondary text-xs lg:text-sm">
             Fresh content updated daily
           </span>
         </div>

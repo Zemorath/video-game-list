@@ -34,8 +34,8 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-dark-bg text-text-primary">
-      {/* Floating Left Navigation Bar - Centered on left side */}
-      <nav className="fixed top-1/2 left-6 transform -translate-y-1/2 w-14 bg-nav-bg rounded-2xl shadow-2xl flex flex-col items-center py-4 space-y-6 z-50">
+      {/* Floating Left Navigation Bar - Desktop only */}
+      <nav className="hidden lg:flex fixed top-1/2 left-6 transform -translate-y-1/2 w-14 bg-nav-bg rounded-2xl shadow-2xl flex-col items-center py-4 space-y-6 z-50">
         <Link to="/" className="group relative">
           <div className="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors duration-200">
             {/* House Icon */}
@@ -97,31 +97,69 @@ function AppContent() {
         )}
       </nav>
 
+      {/* Mobile Bottom Navigation */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-nav-bg border-t border-dark-accent z-50">
+        <div className="flex justify-around items-center py-2">
+          <Link to="/" className="flex flex-col items-center py-2 px-4">
+            <svg className="w-6 h-6 text-text-secondary" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+            </svg>
+            <span className="text-xs text-text-secondary mt-1">Home</span>
+          </Link>
+          
+          {isAuthenticated() && (
+            <>
+              <Link to="/library" className="flex flex-col items-center py-2 px-4">
+                <svg className="w-6 h-6 text-text-secondary" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                </svg>
+                <span className="text-xs text-text-secondary mt-1">Library</span>
+              </Link>
+              
+              <Link to="/users" className="flex flex-col items-center py-2 px-4">
+                <svg className="w-6 h-6 text-text-secondary" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16 4c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c2.67 0 8 1.34 8 4v2h-8v-2c0-.71-.71-1.38-1.71-1.93C14.95 13.22 15.46 12 16 12zM8 4c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4zm0 2C6.9 6 6 6.9 6 8s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c2.67 0 8 1.34 8 4v2H0v-2c0-2.66 5.33-4 8-4z"/>
+                </svg>
+                <span className="text-xs text-text-secondary mt-1">Users</span>
+              </Link>
+              
+              <Link to="/profile" className="flex flex-col items-center py-2 px-4">
+                <svg className="w-6 h-6 text-text-secondary" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+                <span className="text-xs text-text-secondary mt-1">Profile</span>
+              </Link>
+            </>
+          )}
+        </div>
+      </nav>
+
       {/* Top Right Auth Buttons */}
-      <div className="fixed top-6 right-6 z-40">
+      <div className="fixed top-4 right-4 z-40">
         {isAuthenticated() ? (
-          <div className="flex items-center space-x-4">
-            <span className="text-text-secondary text-sm">
+          <div className="flex items-center space-x-2 lg:space-x-4">
+            <span className="hidden sm:block text-text-secondary text-sm">
               Welcome, {user?.username || 'User'}
             </span>
             <button
               onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+              className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-lg transition-colors text-xs lg:text-sm font-medium"
             >
-              Sign Out
+              <span className="hidden sm:inline">Sign Out</span>
+              <span className="sm:hidden">Out</span>
             </button>
           </div>
         ) : (
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 lg:space-x-3">
             <Link 
               to="/login" 
-              className="bg-card-bg hover:bg-hover-gray text-text-primary px-4 py-2 rounded-lg transition-colors text-sm font-medium border border-accent-gray"
+              className="bg-card-bg hover:bg-hover-gray text-text-primary px-3 py-2 lg:px-4 lg:py-2 rounded-lg transition-colors text-xs lg:text-sm font-medium border border-accent-gray"
             >
               Sign In
             </Link>
             <Link 
               to="/register" 
-              className="bg-accent-primary hover:bg-accent-secondary text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+              className="bg-accent-primary hover:bg-accent-secondary text-white px-3 py-2 lg:px-4 lg:py-2 rounded-lg transition-colors text-xs lg:text-sm font-medium"
             >
               Sign Up
             </Link>
@@ -130,28 +168,28 @@ function AppContent() {
       </div>
 
       {/* Main Content Area */}
-      <div className="ml-20 min-h-screen">
-        {/* Search Bar - Aligned with content */}
-        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-40" style={{transform: 'translateX(-50%) translateX(44px)'}}>
-          <div className="relative">
+      <div className="lg:ml-20 min-h-screen pb-20 lg:pb-0">
+        {/* Search Bar - Responsive */}
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 lg:top-6 z-40 px-4 lg:px-0">
+          <div className="relative lg:translate-x-11">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleSearch}
               placeholder="Search for games and press Enter..."
-              className="w-[500px] px-6 py-3 bg-card-bg text-text-primary placeholder-text-secondary border border-accent-gray rounded-xl focus:outline-none focus:border-text-secondary transition-colors duration-200 text-center"
+              className="w-[280px] sm:w-[400px] lg:w-[500px] px-4 py-2 lg:px-6 lg:py-3 bg-card-bg text-text-primary placeholder-text-secondary border border-accent-gray rounded-xl focus:outline-none focus:border-text-secondary transition-colors duration-200 text-center text-sm lg:text-base"
             />
             {searchQuery.length > 0 && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-secondary text-sm">
-                Press Enter ↵
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-secondary text-xs lg:text-sm">
+                Enter ↵
               </div>
             )}
           </div>
         </div>
 
         {/* Page Content */}
-        <div className="pt-32 px-8">
+        <div className="pt-40 lg:pt-32 px-4 lg:px-8">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />

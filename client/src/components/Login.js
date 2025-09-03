@@ -58,10 +58,10 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-dark-primary flex items-start justify-center px-4 sm:px-6 lg:px-8 pt-20 -ml-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen bg-dark-primary flex items-start justify-center px-4 sm:px-6 lg:px-8 pt-24 lg:pt-20 lg:-ml-8">
+      <div className="max-w-md w-full space-y-6 lg:space-y-8">
         <div>
-          <h2 className="text-center text-3xl font-extrabold text-white">
+          <h2 className="text-center text-2xl lg:text-3xl font-extrabold text-white">
             Sign in to your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-400">
