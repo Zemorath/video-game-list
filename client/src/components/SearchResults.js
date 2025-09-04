@@ -24,23 +24,24 @@ const SearchResults = () => {
 
       console.log('Search Query:', searchQuery);
       
+      let localGames = []; // Declare outside try block for broader scope
+      
       try {
         setLoading(true);
         setError('');
         setGames([]);
         
-        // First, search local database
+        // Search both local database and Giant Bomb API for comprehensive results
         console.log('Searching local database for:', searchQuery);
         const localResults = await gamesAPI.searchLocalGames(searchQuery, 50);
         
         if (localResults.success && localResults.games.length > 0) {
           console.log(`Found ${localResults.games.length} games in local database`);
-          setGames(localResults.games);
-          setLoading(false);
-          return;
+          localGames = localResults.games;
         }
         
-        console.log('No local results found, searching Giant Bomb API...');
+        // Always also search Giant Bomb API for additional results
+        console.log('Searching Giant Bomb API for additional results...');
         
         // If no local results, search Giant Bomb API
         const apiUrl = `${API_BASE_URL}/search/?api_key=${API_KEY}&format=json&query=${encodeURIComponent(searchQuery)}&resources=game&limit=20`;
@@ -99,40 +100,69 @@ const SearchResults = () => {
             console.log('Giant Bomb search results:', data);
             
             const searchResults = data.results || [];
+            
+            // Combine local results with API results, removing duplicates
+            let combinedResults = [...localGames];
+            
             if (searchResults.length > 0) {
-              // Cache the results to local database
+              // Cache the API results to local database
               try {
                 console.log(`Caching ${searchResults.length} games to local database...`);
                 const cacheResponse = await gamesAPI.cacheSearchResults(searchResults);
                 if (cacheResponse.success) {
                   console.log(`Successfully cached ${cacheResponse.cached_count} games`);
-                  // Use the cached games (which have local IDs and proper structure)
-                  setGames(cacheResponse.games);
+                  
+                  // Add new cached games to combined results, avoiding duplicates
+                  const existingGuids = new Set(localGames.map(game => game.guid));
+                  const newGames = cacheResponse.games.filter(game => !existingGuids.has(game.guid));
+                  combinedResults = [...combinedResults, ...newGames];
                 } else {
                   console.warn('Failed to cache results, using API results directly');
-                  setGames(searchResults);
+                  // Add API results directly, avoiding duplicates
+                  const existingGuids = new Set(localGames.map(game => game.guid));
+                  const newGames = searchResults.filter(game => !existingGuids.has(game.guid));
+                  combinedResults = [...combinedResults, ...newGames];
                 }
               } catch (cacheError) {
                 console.error('Error caching results:', cacheError);
-                // Fall back to using API results directly
-                setGames(searchResults);
+                // Fall back to using API results directly, avoiding duplicates
+                const existingGuids = new Set(localGames.map(game => game.guid));
+                const newGames = searchResults.filter(game => !existingGuids.has(game.guid));
+                combinedResults = [...combinedResults, ...newGames];
               }
-            } else {
-              setGames([]);
             }
+            
+            console.log(`Combined results: ${localGames.length} local + ${combinedResults.length - localGames.length} new = ${combinedResults.length} total`);
+            setGames(combinedResults);
             return; // Success, exit the loop
             
           } catch (proxyError) {
             console.error(`Proxy ${i + 1} failed:`, proxyError.message);
             if (i === proxies.length - 1) {
-              throw new Error(`All ${proxies.length} CORS proxies failed. This may be due to network issues or proxy service outages.`);
+              // All proxies failed, but we might still have local results
+              if (localGames.length > 0) {
+                console.log(`API search failed, but showing ${localGames.length} local results`);
+                setGames(localGames);
+                setError('API search unavailable, showing local results only. Some games may not appear in search.');
+                return;
+              } else {
+                throw new Error(`All ${proxies.length} CORS proxies failed. This may be due to network issues or proxy service outages.`);
+              }
             }
           }
         }
         
       } catch (error) {
         console.error('Error searching games:', error);
-        setError(`Failed to search games: ${error.message}. Please try again later.`);
+        
+        // If we have local results, show them even if API failed
+        if (localGames.length > 0) {
+          console.log(`Search error occurred, but showing ${localGames.length} local results`);
+          setGames(localGames);
+          setError('API search unavailable, showing local results only. Some games may not appear in search.');
+        } else {
+          setError(`Failed to search games: ${error.message}. Please try again later.`);
+        }
       } finally {
         setLoading(false);
       }
