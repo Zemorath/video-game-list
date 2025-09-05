@@ -88,5 +88,12 @@ def create_app():
     # Create database tables
     with app.app_context():
         db.create_all()
+        
+        # Auto-run platform migration if needed
+        try:
+            from .auto_migrate_platforms import check_and_run_platform_migration
+            check_and_run_platform_migration(app, db)
+        except Exception as e:
+            print(f"Platform migration check failed: {e}")
     
     return app

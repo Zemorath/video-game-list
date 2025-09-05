@@ -121,3 +121,46 @@ def sync_platforms():
             'success': False,
             'message': f'Failed to sync platforms: {str(e)}'
         }), 500
+
+@admin_bp.route('/database-status', methods=['GET'])
+@jwt_required()
+def database_status():
+    """Check database schema status"""
+    try:
+        from app.models import Platform
+        from sqlalchemy import text
+        from app import db
+        
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        
+        if not user:
+            return jsonify({'success': False, 'message': 'User not found'}), 404
+        
+        # Check Platform table
+        platform_count = Platform.query.count()
+        
+        # Check if platform_id column exists in user_games
+        try:
+            result = db.session.execute(text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name='user_games' AND column_name='platform_id'
+            """)).fetchone()
+            platform_column_exists = result is not None
+        except:
+            platform_column_exists = False
+        
+        return jsonify({
+            'success': True,
+            'platform_table_exists': True,
+            'platform_count': platform_count,
+            'platform_column_exists': platform_column_exists,
+            'database_ready': platform_column_exists
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Failed to check database status: {str(e)}'
+        }), 500
