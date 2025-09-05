@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { gamesAPI, platformsAPI } from '../services/api';
+import { gamesAPI } from '../services/api';
 
 const Library = () => {
   const [userGames, setUserGames] = useState([]);
   const [filteredGames, setFilteredGames] = useState([]);
-  const [platforms, setPlatforms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingGame, setEditingGame] = useState(null);
@@ -23,7 +22,6 @@ const Library = () => {
   useEffect(() => {
     if (isAuthenticated()) {
       fetchUserLibrary();
-      fetchPlatforms();
     } else {
       setLoading(false);
     }
@@ -44,18 +42,6 @@ const Library = () => {
       setError('Failed to load your library');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchPlatforms = async () => {
-    try {
-      const response = await platformsAPI.getAllPlatforms();
-      if (response.success) {
-        setPlatforms(response.platforms || []);
-      }
-    } catch (err) {
-      console.error('Error fetching platforms:', err);
-      // Don't show error for platforms as it's not critical
     }
   };
 
@@ -403,8 +389,8 @@ const Library = () => {
                           className="w-full bg-dark-secondary text-white text-xs px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
                         >
                           <option value="">Select Platform</option>
-                          {platforms.map(platform => (
-                            <option key={platform.id} value={platform.id}>
+                          {userGame.game?.platforms?.map(platform => (
+                            <option key={platform.guid || platform.id} value={platform.guid || platform.id}>
                               {platform.name} {platform.abbreviation ? `(${platform.abbreviation})` : ''}
                             </option>
                           ))}
