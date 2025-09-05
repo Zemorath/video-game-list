@@ -216,8 +216,8 @@ class Platform(db.Model):
     date_added = db.Column(db.String(30), nullable=True)
     date_last_updated = db.Column(db.String(30), nullable=True)
     
-    # Relationships
-    user_games = db.relationship('UserGame', backref='platform', lazy=True)
+    # Note: Relationships removed since platform_id now stores GUIDs directly
+    # instead of foreign key references
     
     def to_dict(self):
         """Convert platform object to dictionary"""
