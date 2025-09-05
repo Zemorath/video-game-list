@@ -249,7 +249,7 @@ class UserGame(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     game_id = db.Column(db.Integer, db.ForeignKey('games.id'), nullable=False)
-    platform_id = db.Column(db.Integer, db.ForeignKey('platforms.id'), nullable=True)  # Which platform/console user has the game on
+    platform_id = db.Column(db.String(50), nullable=True)  # Store platform GUID directly from game's platform data
     status = db.Column(db.String(20), default='want_to_play', nullable=True)  # want_to_play, playing, completed, dropped
     rating = db.Column(db.Integer, nullable=True)  # 1-10 rating
     review = db.Column(db.Text, nullable=True)
