@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route, Routes, Link, useNavigate } from 'react
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Home from './components/Home';
-import Library from './components/Library';
+import Vault from './components/Vault';
 import Profile from './components/Profile';
 import Users from './components/Users';
 import UserProfile from './components/UserProfile';
@@ -64,7 +64,7 @@ function AppContent() {
               </div>
               {/* Tooltip */}
               <div className="absolute left-full ml-3 top-1/2 transform -translate-y-1/2 bg-nav-bg text-text-primary text-sm px-3 py-2 rounded-lg shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-60">
-                Library
+                Vault
                 <div className="absolute right-full top-1/2 transform -translate-y-1/2 w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-nav-bg"></div>
               </div>
             </Link>
@@ -116,7 +116,7 @@ function AppContent() {
                 <svg className="w-6 h-6 text-text-secondary" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
                 </svg>
-                <span className="text-xs text-text-secondary mt-1">Library</span>
+                <span className="text-xs text-text-secondary mt-1">Vault</span>
               </Link>
               
               <Link to="/users" className="flex flex-col items-center py-2 px-4">
@@ -203,7 +203,7 @@ function AppContent() {
               path="/library" 
               element={
                 <ProtectedRoute>
-                  <Library />
+                  <Vault />
                 </ProtectedRoute>
               } 
             />

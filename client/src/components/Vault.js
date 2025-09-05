@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { gamesAPI } from '../services/api';
 
-const Library = () => {
+const Vault = () => {
   const [userGames, setUserGames] = useState([]);
   const [filteredGames, setFilteredGames] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -168,7 +168,7 @@ const Library = () => {
         <div className="text-center py-12">
           <div className="bg-card-bg rounded-2xl p-8 max-w-md mx-auto">
             <h3 className="text-xl font-medium text-text-primary mb-2">Sign in Required</h3>
-            <p className="text-text-secondary">Please sign in to view your game library.</p>
+            <p className="text-text-secondary">Please sign in to view your game vault.</p>
           </div>
         </div>
       </div>
@@ -178,7 +178,7 @@ const Library = () => {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-4xl font-light text-text-primary mb-4">Your Game Library</h1>
+        <h1 className="text-4xl font-light text-text-primary mb-4">Your Game Vault</h1>
         <p className="text-lg text-text-secondary font-light">
           {filteredGames.length} of {userGames.length} {userGames.length === 1 ? 'game' : 'games'} 
           {searchQuery && ` matching "${searchQuery}"`}
@@ -257,7 +257,7 @@ const Library = () => {
         <div className="text-center py-12">
           <div className="bg-card-bg rounded-2xl p-8 max-w-md mx-auto">
             <h3 className="text-xl font-medium text-text-primary mb-2">No games yet</h3>
-            <p className="text-text-secondary mb-4">Start building your library by searching for games.</p>
+            <p className="text-text-secondary mb-4">Start building your vault by searching for games.</p>
             <a 
               href="/search?q=popular" 
               className="inline-block bg-accent-primary hover:bg-accent-secondary text-white px-4 py-2 rounded-lg transition-colors"
@@ -559,7 +559,7 @@ const Library = () => {
                 {/* Editing form for list view */}
                 {isEditing && (
                   <div className="mt-4 pt-4 border-t border-gray-600">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                       {/* Status dropdown */}
                       <div>
                         <label className="block text-xs text-gray-400 mb-1">Status</label>
@@ -603,6 +603,23 @@ const Library = () => {
                           placeholder="Hours"
                         />
                       </div>
+
+                      {/* Platform dropdown */}
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Console/Platform</label>
+                        <select
+                          value={editForm.platform_id}
+                          onChange={(e) => setEditForm({...editForm, platform_id: e.target.value})}
+                          className="w-full bg-dark-secondary text-white text-sm px-3 py-2 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                        >
+                          <option value="">Select Platform</option>
+                          {userGame.game?.platforms?.map(platform => (
+                            <option key={platform.guid || platform.id} value={platform.guid || platform.id}>
+                              {platform.name} {platform.abbreviation ? `(${platform.abbreviation})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -615,4 +632,4 @@ const Library = () => {
   );
 };
 
-export default Library;
+export default Vault;
