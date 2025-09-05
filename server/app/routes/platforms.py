@@ -108,7 +108,8 @@ def sync_platforms_from_api():
             }), 500
         
         # Fetch platforms from Giant Bomb API
-        base_url = 'https://www.giantbomb.com/api/platforms/'
+        api_url = os.getenv('REACT_APP_GIANT_BOMB_API_URL', 'https://www.giantbomb.com/api')
+        base_url = f'{api_url}/platforms/'
         params = {
             'api_key': api_key,
             'format': 'json',
@@ -117,56 +118,80 @@ def sync_platforms_from_api():
         }
         
         # Use CORS proxy for API call
-        proxies = [
-            'https://corsproxy.io/?',
-            'https://api.allorigins.win/get?url='
-        ]
-        
         platforms_cached = 0
         total_platforms = 0
         
-        for proxy in proxies:
-            try:
-                if 'allorigins.win' in proxy:
-                    params_str = '&'.join([f"{k}={v}" for k, v in params.items()])
-                    full_url = f"{proxy}{base_url}?{params_str}"
-                else:
-                    params_str = '&'.join([f"{k}={v}" for k, v in params.items()])
-                    full_url = f"{proxy}{base_url}?{params_str}"
-                
-                print(f"Fetching platforms from: {full_url}")
-                
-                response = requests.get(full_url, timeout=30)
-                response.raise_for_status()
-                
-                if 'allorigins.win' in proxy:
-                    data = response.json()
-                    if data.get('status', {}).get('http_code') == 200:
-                        api_data = data.get('contents', {})
-                        if isinstance(api_data, str):
-                            import json
-                            api_data = json.loads(api_data)
+        # Try direct API call first (no CORS issues on server-side)
+        try:
+            print(f"Fetching platforms from: {base_url}")
+            print(f"Using API key: {api_key[:8]}...")
+            
+            response = requests.get(base_url, params=params, timeout=30)
+            response.raise_for_status()
+            
+            api_data = response.json()
+            platforms_data = api_data.get('results', [])
+            total_platforms = len(platforms_data)
+            
+            print(f"Found {total_platforms} platforms from Giant Bomb API")
+            
+            # Cache each platform
+            for platform_data in platforms_data:
+                cached_platform = cache_platform_from_api_data(platform_data)
+                if cached_platform:
+                    platforms_cached += 1
+                    
+        except Exception as e:
+            print(f"Direct API call failed: {e}")
+            
+            # Fallback to CORS proxies if direct call fails
+            proxies = [
+                'https://corsproxy.io/?',
+                'https://api.allorigins.win/get?url='
+            ]
+            
+            for proxy in proxies:
+                try:
+                    if 'allorigins.win' in proxy:
+                        params_str = '&'.join([f"{k}={v}" for k, v in params.items()])
+                        full_url = f"{proxy}{base_url}?{params_str}"
                     else:
-                        continue
-                else:
-                    api_data = response.json()
-                
-                platforms_data = api_data.get('results', [])
-                total_platforms = len(platforms_data)
-                
-                print(f"Found {total_platforms} platforms from Giant Bomb API")
-                
-                # Cache each platform
-                for platform_data in platforms_data:
-                    cached_platform = cache_platform_from_api_data(platform_data)
-                    if cached_platform:
-                        platforms_cached += 1
-                
-                break  # Success, exit proxy loop
-                
-            except Exception as proxy_error:
-                print(f"Proxy failed: {proxy_error}")
-                continue
+                        params_str = '&'.join([f"{k}={v}" for k, v in params.items()])
+                        full_url = f"{proxy}{base_url}?{params_str}"
+                    
+                    print(f"Trying proxy: {full_url}")
+                    
+                    response = requests.get(full_url, timeout=30)
+                    response.raise_for_status()
+                    
+                    if 'allorigins.win' in proxy:
+                        data = response.json()
+                        if data.get('status', {}).get('http_code') == 200:
+                            api_data = data.get('contents', {})
+                            if isinstance(api_data, str):
+                                import json
+                                api_data = json.loads(api_data)
+                        else:
+                            continue
+                    else:
+                        api_data = response.json()
+                    
+                    platforms_data = api_data.get('results', [])
+                    total_platforms = len(platforms_data)
+                    
+                    print(f"Found {total_platforms} platforms from Giant Bomb API")
+                    
+                    # Cache each platform
+                    for platform_data in platforms_data:
+                        cached_platform = cache_platform_from_api_data(platform_data)
+                        if cached_platform:
+                            platforms_cached += 1
+                    
+                    break  # Success, exit proxy loop
+                    
+                except Exception as proxy_error:
+                    print(f"Proxy failed: {proxy_error}")
+                    continue
         
         if platforms_cached == 0 and total_platforms == 0:
             return jsonify({
