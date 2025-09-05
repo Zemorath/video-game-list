@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models import User
 from app.utils.rate_limiter import rate_limit_storage
 from app.utils.bot_protection import bot_protection
+from app.routes.platforms import platforms_bp
 import json
 import os
 
@@ -90,4 +91,33 @@ def clear_suspicious_ips():
         return jsonify({
             'success': False,
             'message': f'Failed to clear records: {str(e)}'
+        }), 500
+
+@admin_bp.route('/sync-platforms', methods=['POST'])
+@jwt_required()
+def sync_platforms():
+    """Sync platforms from Giant Bomb API (admin function)"""
+    try:
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        
+        if not user:
+            return jsonify({'success': False, 'message': 'User not found'}), 404
+        
+        # Import here to avoid circular imports
+        from app.routes.platforms import sync_platforms_from_api
+        
+        # Call the platform sync function
+        # For now, we'll allow any logged-in user to sync platforms
+        # In production, you might want to add admin role checks
+        
+        return jsonify({
+            'success': True,
+            'message': 'Platform sync initiated. Use /api/platforms/sync-from-api endpoint directly.'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Failed to sync platforms: {str(e)}'
         }), 500

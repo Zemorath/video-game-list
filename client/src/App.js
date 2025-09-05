@@ -146,10 +146,10 @@ function AppContent() {
             </span>
             <button
               onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-lg transition-colors text-xs lg:text-sm font-medium"
+              className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 lg:px-4 lg:py-2 rounded-lg transition-colors text-xs lg:text-sm font-medium min-w-[70px]"
             >
               <span className="hidden sm:inline">Sign Out</span>
-              <span className="sm:hidden">Out</span>
+              <span className="sm:hidden">Logout</span>
             </button>
           </div>
         ) : (

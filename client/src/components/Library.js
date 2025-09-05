@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { gamesAPI } from '../services/api';
+import { gamesAPI, platformsAPI } from '../services/api';
 
 const Library = () => {
   const [userGames, setUserGames] = useState([]);
   const [filteredGames, setFilteredGames] = useState([]);
+  const [platforms, setPlatforms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingGame, setEditingGame] = useState(null);
   const [editForm, setEditForm] = useState({
     status: '',
     rating: '',
-    hours_played: ''
+    hours_played: '',
+    platform_id: ''
   });
   const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'list'
   const [sortBy, setSortBy] = useState('title'); // 'title', 'rating', 'status'
@@ -21,6 +23,7 @@ const Library = () => {
   useEffect(() => {
     if (isAuthenticated()) {
       fetchUserLibrary();
+      fetchPlatforms();
     } else {
       setLoading(false);
     }
@@ -41,6 +44,18 @@ const Library = () => {
       setError('Failed to load your library');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPlatforms = async () => {
+    try {
+      const response = await platformsAPI.getAllPlatforms();
+      if (response.success) {
+        setPlatforms(response.platforms || []);
+      }
+    } catch (err) {
+      console.error('Error fetching platforms:', err);
+      // Don't show error for platforms as it's not critical
     }
   };
 
@@ -111,7 +126,8 @@ const Library = () => {
     setEditForm({
       status: userGame.status || 'want_to_play',
       rating: userGame.rating || '',
-      hours_played: userGame.hours_played || ''
+      hours_played: userGame.hours_played || '',
+      platform_id: userGame.platform_id || ''
     });
   };
 
@@ -120,7 +136,8 @@ const Library = () => {
     setEditForm({
       status: '',
       rating: '',
-      hours_played: ''
+      hours_played: '',
+      platform_id: ''
     });
   };
 
@@ -129,7 +146,8 @@ const Library = () => {
       const response = await gamesAPI.updateUserGame(userGameId, {
         status: editForm.status,
         rating: editForm.rating ? parseInt(editForm.rating) : null,
-        hours_played: editForm.hours_played ? parseFloat(editForm.hours_played) : null
+        hours_played: editForm.hours_played ? parseFloat(editForm.hours_played) : null,
+        platform_id: editForm.platform_id ? parseInt(editForm.platform_id) : null
       });
       
       if (response.success) {
@@ -376,6 +394,23 @@ const Library = () => {
                         />
                       </div>
                       
+                      {/* Platform dropdown */}
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Console/Platform</label>
+                        <select
+                          value={editForm.platform_id}
+                          onChange={(e) => setEditForm({...editForm, platform_id: e.target.value})}
+                          className="w-full bg-dark-secondary text-white text-xs px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                        >
+                          <option value="">Select Platform</option>
+                          {platforms.map(platform => (
+                            <option key={platform.id} value={platform.id}>
+                              {platform.name} {platform.abbreviation ? `(${platform.abbreviation})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      
                       {/* Action buttons */}
                       <div className="flex space-x-2">
                         <button
@@ -427,6 +462,13 @@ const Library = () => {
                           {userGame.hours_played ? `🕒 ${userGame.hours_played}h` : 'No time logged'}
                         </span>
                       </div>
+                      
+                      {/* Platform info */}
+                      {userGame.platform && (
+                        <div className="text-xs text-gray-400">
+                          <span>🎮 {userGame.platform.name}</span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

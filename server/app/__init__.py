@@ -64,12 +64,14 @@ def create_app():
     from app.routes.users import users_bp
     from app.routes.youtube import youtube_bp
     from app.routes.admin import admin_bp
+    from app.routes.platforms import platforms_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(games_bp, url_prefix='/api/games')
     app.register_blueprint(users_bp, url_prefix='/api/users')
     app.register_blueprint(youtube_bp, url_prefix='/api/youtube')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    app.register_blueprint(platforms_bp, url_prefix='/api/platforms')
     
     # Health check endpoint for load balancer
     @app.route('/')

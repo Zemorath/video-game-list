@@ -184,12 +184,72 @@ class Game(db.Model):
     def __repr__(self):
         return f'<Game {self.name}>'
 
+class Platform(db.Model):
+    __tablename__ = 'platforms'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    guid = db.Column(db.String(50), unique=True, nullable=False, index=True)  # Giant Bomb GUID
+    name = db.Column(db.String(255), nullable=False, index=True)
+    abbreviation = db.Column(db.String(50), nullable=True)
+    deck = db.Column(db.Text, nullable=True)  # Brief description
+    description = db.Column(db.Text, nullable=True)
+    
+    # Image URLs
+    image_url = db.Column(db.String(500), nullable=True)
+    icon_url = db.Column(db.String(500), nullable=True)
+    
+    # Company/manufacturer
+    company = db.Column(db.JSON, nullable=True)  # Store as JSON object
+    
+    # Dates
+    release_date = db.Column(db.String(20), nullable=True)
+    
+    # URLs
+    site_detail_url = db.Column(db.String(500), nullable=True)
+    api_detail_url = db.Column(db.String(500), nullable=True)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Timestamps from Giant Bomb
+    date_added = db.Column(db.String(30), nullable=True)
+    date_last_updated = db.Column(db.String(30), nullable=True)
+    
+    # Relationships
+    user_games = db.relationship('UserGame', backref='platform', lazy=True)
+    
+    def to_dict(self):
+        """Convert platform object to dictionary"""
+        return {
+            'id': self.id,
+            'guid': self.guid,
+            'name': self.name,
+            'abbreviation': self.abbreviation,
+            'deck': self.deck,
+            'description': self.description,
+            'image_url': self.image_url,
+            'icon_url': self.icon_url,
+            'company': self.company,
+            'release_date': self.release_date,
+            'site_detail_url': self.site_detail_url,
+            'api_detail_url': self.api_detail_url,
+            'date_added': self.date_added,
+            'date_last_updated': self.date_last_updated,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
+    def __repr__(self):
+        return f'<Platform {self.name}>'
+
 class UserGame(db.Model):
     __tablename__ = 'user_games'
     
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     game_id = db.Column(db.Integer, db.ForeignKey('games.id'), nullable=False)
+    platform_id = db.Column(db.Integer, db.ForeignKey('platforms.id'), nullable=True)  # Which platform/console user has the game on
     status = db.Column(db.String(20), default='want_to_play', nullable=True)  # want_to_play, playing, completed, dropped
     rating = db.Column(db.Integer, nullable=True)  # 1-10 rating
     review = db.Column(db.Text, nullable=True)
@@ -208,6 +268,7 @@ class UserGame(db.Model):
             'id': self.id,
             'user_id': self.user_id,
             'game_id': self.game_id,
+            'platform_id': self.platform_id,
             'status': self.status,
             'rating': self.rating,
             'review': self.review,
@@ -216,7 +277,8 @@ class UserGame(db.Model):
             'date_added': self.date_added.isoformat() if self.date_added else None,
             'date_started': self.date_started.isoformat() if self.date_started else None,
             'date_completed': self.date_completed.isoformat() if self.date_completed else None,
-            'game': self.game.to_dict() if self.game else None
+            'game': self.game.to_dict() if self.game else None,
+            'platform': self.platform.to_dict() if self.platform else None
         }
     
     def __repr__(self):

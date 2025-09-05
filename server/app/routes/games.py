@@ -96,11 +96,13 @@ class GameSearchSchema(Schema):
 class AddGameToLibrarySchema(Schema):
     game_guid = fields.Str(required=True)
     status = fields.Str(missing='want_to_play', validate=lambda x: x in ['want_to_play', 'playing', 'completed', 'dropped', 'collection'])
+    platform_id = fields.Int(allow_none=True)
 
 class UpdateUserGameSchema(Schema):
     status = fields.Str(validate=lambda x: x in ['want_to_play', 'playing', 'completed', 'dropped', 'collection'])
     rating = fields.Int(validate=lambda x: x is None or (1 <= x <= 10), allow_none=True)
     hours_played = fields.Float(validate=lambda x: x is None or x >= 0, allow_none=True)
+    platform_id = fields.Int(allow_none=True)
 
 @games_bp.route('/search', methods=['GET'])
 def search_games():
@@ -219,6 +221,7 @@ def add_game_to_library():
             user_id=user_id,
             game_id=game.id,
             status=data['status'],
+            platform_id=data.get('platform_id'),
             image_url=game.image_url  # Store the image URL for quick access
         )
         
@@ -295,6 +298,7 @@ def add_external_game_to_library():
             user_id=user_id,
             game_id=game.id,
             status=data.get('status', 'want_to_play'),
+            platform_id=data.get('platform_id'),
             image_url=game.image_url  # Store the image URL for quick access
         )
         
@@ -389,6 +393,9 @@ def update_user_game(user_game_id):
         
         if 'hours_played' in data:
             user_game.hours_played = data['hours_played']
+        
+        if 'platform_id' in data:
+            user_game.platform_id = data['platform_id']
         
         # Update status-based dates
         if 'status' in data:

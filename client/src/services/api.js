@@ -68,10 +68,11 @@ export const gamesAPI = {
     return response.data;
   },
 
-  addExistingGameToLibrary: async (gameGuid, status = 'want_to_play') => {
+  addExistingGameToLibrary: async (gameGuid, status = 'want_to_play', platformId = null) => {
     const response = await api.post('/games/library/add', {
       game_guid: gameGuid,
-      status: status
+      status: status,
+      platform_id: platformId
     });
     return response.data;
   },
@@ -142,6 +143,23 @@ export const youtubeAPI = {
 
   refreshReviews: async () => {
     const response = await api.post('/youtube/refresh-reviews');
+    return response.data;
+  }
+};
+
+export const platformsAPI = {
+  getAllPlatforms: async () => {
+    const response = await api.get('/platforms/');
+    return response.data;
+  },
+
+  getPlatformByGuid: async (guid) => {
+    const response = await api.get(`/platforms/${guid}`);
+    return response.data;
+  },
+
+  syncFromAPI: async () => {
+    const response = await api.post('/platforms/sync-from-api');
     return response.data;
   }
 };
