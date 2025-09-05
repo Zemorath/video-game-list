@@ -96,13 +96,13 @@ class GameSearchSchema(Schema):
 class AddGameToLibrarySchema(Schema):
     game_guid = fields.Str(required=True)
     status = fields.Str(missing='want_to_play', validate=lambda x: x in ['want_to_play', 'playing', 'completed', 'dropped', 'collection'])
-    platform_id = fields.Int(allow_none=True)
+    platform_id = fields.Str(allow_none=True)
 
 class UpdateUserGameSchema(Schema):
     status = fields.Str(validate=lambda x: x in ['want_to_play', 'playing', 'completed', 'dropped', 'collection'])
     rating = fields.Int(validate=lambda x: x is None or (1 <= x <= 10), allow_none=True)
     hours_played = fields.Float(validate=lambda x: x is None or x >= 0, allow_none=True)
-    platform_id = fields.Int(allow_none=True)
+    platform_id = fields.Str(allow_none=True)
 
 @games_bp.route('/search', methods=['GET'])
 def search_games():
