@@ -133,7 +133,7 @@ const Vault = () => {
         status: editForm.status,
         rating: editForm.rating ? parseInt(editForm.rating) : null,
         hours_played: editForm.hours_played ? parseFloat(editForm.hours_played) : null,
-        platform_id: editForm.platform_id ? parseInt(editForm.platform_id) : null
+        platform_id: editForm.platform_id || null
       });
       
       if (response.success) {
