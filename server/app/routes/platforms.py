@@ -93,16 +93,12 @@ def get_platforms():
         }), 500
 
 @platforms_bp.route('/sync-from-api', methods=['POST'])
-@jwt_required()
 def sync_platforms_from_api():
     """
     Fetch all platforms from Giant Bomb API and cache them locally
     This should be run once to populate the platforms database
     """
     try:
-        # Check if user is admin (optional - you might want to restrict this)
-        current_user_id = get_jwt_identity()
-        
         # Giant Bomb API configuration
         api_key = os.getenv('GIANT_BOMB_API_KEY')
         if not api_key:
