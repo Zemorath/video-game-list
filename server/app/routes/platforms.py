@@ -100,7 +100,7 @@ def sync_platforms_from_api():
     """
     try:
         # Giant Bomb API configuration
-        api_key = os.getenv('GIANT_BOMB_API_KEY')
+        api_key = os.getenv('REACT_APP_GIANT_BOMB_API_KEY')
         if not api_key:
             return jsonify({
                 'success': False,
