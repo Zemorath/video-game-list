@@ -5,11 +5,10 @@ Migration script to change platform_id column from integer to string
 import sys
 import os
 
-# Add the project root to the path
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+# Add the server directory to the path
+sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), 'server'))
 
-from server.app import create_app, db
-from server.app.models import UserGame
+from app import create_app, db
 
 def migrate_platform_id():
     """Change platform_id column from integer to string"""
