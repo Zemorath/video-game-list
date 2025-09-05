@@ -278,7 +278,7 @@ class UserGame(db.Model):
             'date_started': self.date_started.isoformat() if self.date_started else None,
             'date_completed': self.date_completed.isoformat() if self.date_completed else None,
             'game': self.game.to_dict() if self.game else None,
-            'platform': self.platform.to_dict() if self.platform else None
+            'platform_id': self.platform_id
         }
     
     def __repr__(self):
