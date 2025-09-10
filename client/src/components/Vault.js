@@ -15,8 +15,9 @@ const Vault = () => {
     platform_id: ''
   });
   const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'list'
-  const [sortBy, setSortBy] = useState('title'); // 'title', 'rating', 'status'
+  const [sortBy, setSortBy] = useState('title'); // 'title', 'rating', 'status', 'recently_added', 'console'
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedConsole, setSelectedConsole] = useState(''); // For console filtering
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
@@ -45,7 +46,7 @@ const Vault = () => {
     }
   };
 
-  // Filter and sort games whenever userGames, searchQuery, or sortBy changes
+  // Filter and sort games whenever userGames, searchQuery, sortBy, or selectedConsole changes
   useEffect(() => {
     let filtered = [...userGames];
 
@@ -62,6 +63,13 @@ const Vault = () => {
         }
         
         return gameName.includes(query) || status.includes(query);
+      });
+    }
+
+    // Apply console filter when console sorting is selected and a specific console is chosen
+    if (sortBy === 'console' && selectedConsole) {
+      filtered = filtered.filter(userGame => {
+        return userGame.platform_id === selectedConsole;
       });
     }
 
@@ -84,13 +92,52 @@ const Vault = () => {
           const statusB = statusOrder[b.status] ?? 5;
           return statusA - statusB;
         
+        case 'recently_added':
+          const dateA = new Date(a.date_added || 0);
+          const dateB = new Date(b.date_added || 0);
+          return dateB - dateA; // Most recent first
+        
+        case 'console':
+          // Sort by console name, but only if not filtering by specific console
+          if (!selectedConsole) {
+            const consoleA = getPlatformName(a.platform_id, a.game?.platforms) || '';
+            const consoleB = getPlatformName(b.platform_id, b.game?.platforms) || '';
+            return consoleA.localeCompare(consoleB);
+          }
+          return 0; // No additional sorting when filtering by specific console
+        
         default:
           return 0;
       }
     });
 
     setFilteredGames(filtered);
-  }, [userGames, searchQuery, sortBy]);
+  }, [userGames, searchQuery, sortBy, selectedConsole]);
+
+  // Helper function to get platform name from platform_id
+  const getPlatformName = (platformId, platforms) => {
+    if (!platformId || !platforms) return '';
+    const platform = platforms.find(p => p.guid === platformId || p.id === platformId);
+    return platform ? platform.name : '';
+  };
+
+  // Get unique consoles from user's games
+  const getUniqueConsoles = () => {
+    const consoles = new Map();
+    
+    userGames.forEach(userGame => {
+      if (userGame.platform_id && userGame.game?.platforms) {
+        const platform = userGame.game.platforms.find(p => 
+          p.guid === userGame.platform_id || p.id === userGame.platform_id
+        );
+        if (platform && !consoles.has(platform.guid || platform.id)) {
+          consoles.set(platform.guid || platform.id, platform);
+        }
+      }
+    });
+    
+    return Array.from(consoles.values()).sort((a, b) => a.name.localeCompare(b.name));
+  };
 
   const removeGame = async (userGameId) => {
     try {
@@ -235,13 +282,37 @@ const Vault = () => {
               <span className="text-sm text-gray-400 font-medium">Sort by:</span>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => {
+                  setSortBy(e.target.value);
+                  // Reset console filter when changing sort type
+                  if (e.target.value !== 'console') {
+                    setSelectedConsole('');
+                  }
+                }}
                 className="bg-dark-secondary text-white px-3 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none text-sm"
               >
                 <option value="title">Title</option>
                 <option value="rating">Rating</option>
                 <option value="status">Status</option>
+                <option value="recently_added">Recently Added</option>
+                <option value="console">Console</option>
               </select>
+              
+              {/* Console Filter Dropdown - only show when console sort is selected */}
+              {sortBy === 'console' && (
+                <select
+                  value={selectedConsole}
+                  onChange={(e) => setSelectedConsole(e.target.value)}
+                  className="bg-dark-secondary text-white px-3 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none text-sm"
+                >
+                  <option value="">All Consoles</option>
+                  {getUniqueConsoles().map(platform => (
+                    <option key={platform.guid || platform.id} value={platform.guid || platform.id}>
+                      {platform.name} {platform.abbreviation ? `(${platform.abbreviation})` : ''}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
         </div>
