@@ -18,6 +18,7 @@ const Vault = () => {
   const [sortBy, setSortBy] = useState('title'); // 'title', 'rating', 'status', 'recently_added', 'console'
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedConsole, setSelectedConsole] = useState(''); // For console filtering
+  const [recentlyAddedDesc, setRecentlyAddedDesc] = useState(true); // true = newest first, false = oldest first
   const { isAuthenticated } = useAuth();
 
   useEffect(() => {
@@ -95,7 +96,7 @@ const Vault = () => {
         case 'recently_added':
           const dateA = new Date(a.date_added || 0);
           const dateB = new Date(b.date_added || 0);
-          return dateB - dateA; // Most recent first
+          return recentlyAddedDesc ? (dateB - dateA) : (dateA - dateB); // Toggle between newest and oldest first
         
         case 'console':
           // Sort by console name, but only if not filtering by specific console
@@ -112,11 +113,13 @@ const Vault = () => {
     });
 
     setFilteredGames(filtered);
-  }, [userGames, searchQuery, sortBy, selectedConsole]);
+  }, [userGames, searchQuery, sortBy, selectedConsole, recentlyAddedDesc]);
 
   // Helper function to get platform name from platform_id
   const getPlatformName = (platformId, platforms) => {
-    if (!platformId || !platforms) return '';
+    if (!platformId) return '';
+    if (platformId === 'not_listed') return 'Not Listed';
+    if (!platforms) return '';
     const platform = platforms.find(p => p.guid === platformId || p.id === platformId);
     return platform ? platform.name : '';
   };
@@ -125,18 +128,51 @@ const Vault = () => {
   const getUniqueConsoles = () => {
     const consoles = new Map();
     
-    userGames.forEach(userGame => {
-      if (userGame.platform_id && userGame.game?.platforms) {
-        const platform = userGame.game.platforms.find(p => 
-          p.guid === userGame.platform_id || p.id === userGame.platform_id
-        );
-        if (platform && !consoles.has(platform.guid || platform.id)) {
-          consoles.set(platform.guid || platform.id, platform);
+    console.log('Debug: userGames length:', userGames.length);
+    
+    userGames.forEach((userGame, index) => {
+      console.log(`Debug: userGame ${index}:`, {
+        platform_id: userGame.platform_id,
+        has_game: !!userGame.game,
+        has_platforms: !!userGame.game?.platforms,
+        platforms_length: userGame.game?.platforms?.length || 0
+      });
+      
+      if (userGame.platform_id) {
+        if (userGame.platform_id === 'not_listed') {
+          // Add "Not Listed" option
+          if (!consoles.has('not_listed')) {
+            consoles.set('not_listed', { 
+              guid: 'not_listed', 
+              id: 'not_listed', 
+              name: 'Not Listed', 
+              abbreviation: '' 
+            });
+            console.log('Debug: Added "Not Listed" to console map');
+          }
+        } else if (userGame.game?.platforms) {
+          const platform = userGame.game.platforms.find(p => 
+            p.guid === userGame.platform_id || p.id === userGame.platform_id
+          );
+          
+          console.log(`Debug: Found platform for ${userGame.platform_id}:`, platform);
+          
+          if (platform && !consoles.has(platform.guid || platform.id)) {
+            consoles.set(platform.guid || platform.id, platform);
+            console.log('Debug: Added platform to map:', platform.name);
+          }
         }
       }
     });
     
-    return Array.from(consoles.values()).sort((a, b) => a.name.localeCompare(b.name));
+    const result = Array.from(consoles.values()).sort((a, b) => {
+      // Sort "Not Listed" to the end
+      if (a.name === 'Not Listed') return 1;
+      if (b.name === 'Not Listed') return -1;
+      return a.name.localeCompare(b.name);
+    });
+    console.log('Debug: Final unique consoles:', result);
+    return result;
   };
 
   const removeGame = async (userGameId) => {
@@ -277,26 +313,50 @@ const Vault = () => {
               </div>
             </div>
 
-            {/* Sort Controls */}
+              {/* Sort Controls */}
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-400 font-medium">Sort by:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => {
-                  setSortBy(e.target.value);
-                  // Reset console filter when changing sort type
-                  if (e.target.value !== 'console') {
-                    setSelectedConsole('');
-                  }
-                }}
-                className="bg-dark-secondary text-white px-3 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none text-sm"
-              >
-                <option value="title">Title</option>
-                <option value="rating">Rating</option>
-                <option value="status">Status</option>
-                <option value="recently_added">Recently Added</option>
-                <option value="console">Console</option>
-              </select>
+              <div className="flex items-center space-x-2">
+                <select
+                  value={sortBy}
+                  onChange={(e) => {
+                    setSortBy(e.target.value);
+                    // Reset console filter when changing sort type
+                    if (e.target.value !== 'console') {
+                      setSelectedConsole('');
+                    }
+                  }}
+                  className="bg-dark-secondary text-white px-3 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none text-sm"
+                >
+                  <option value="title">Title</option>
+                  <option value="rating">Rating</option>
+                  <option value="status">Status</option>
+                  <option value="recently_added">Recently Added</option>
+                  <option value="console">Console</option>
+                </select>
+                
+                {/* Recently Added Toggle Button */}
+                {sortBy === 'recently_added' && (
+                  <button
+                    onClick={() => setRecentlyAddedDesc(!recentlyAddedDesc)}
+                    className="bg-dark-secondary hover:bg-gray-600 text-white px-2 py-1 rounded border border-gray-600 transition-colors flex items-center space-x-1"
+                    title={recentlyAddedDesc ? "Switch to oldest first" : "Switch to newest first"}
+                  >
+                    {/* Arrow pointing up for newest first, down for oldest first */}
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {recentlyAddedDesc ? (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                      ) : (
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                      )}
+                    </svg>
+                    {/* Clock icon */}
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
               
               {/* Console Filter Dropdown - only show when console sort is selected */}
               {sortBy === 'console' && (
@@ -465,6 +525,7 @@ const Vault = () => {
                               {platform.name} {platform.abbreviation ? `(${platform.abbreviation})` : ''}
                             </option>
                           ))}
+                          <option value="not_listed">Not Listed</option>
                         </select>
                       </div>
                       
@@ -689,6 +750,7 @@ const Vault = () => {
                               {platform.name} {platform.abbreviation ? `(${platform.abbreviation})` : ''}
                             </option>
                           ))}
+                          <option value="not_listed">Not Listed</option>
                         </select>
                       </div>
                     </div>
