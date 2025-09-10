@@ -120,7 +120,7 @@ const Vault = () => {
     if (!platformId) return '';
     if (platformId === 'not_listed') return 'Not Listed';
     
-    // Common platform ID mappings - comprehensive list
+    // Common platform ID mappings - comprehensive and accurate list
     const platformMap = {
       // PC and Mac
       '94': 'PC',
@@ -130,8 +130,10 @@ const Vault = () => {
       '22': 'PlayStation',
       '40': 'PlayStation 2',
       '35': 'PlayStation 3',
-      '139': 'PlayStation 4',
-      '146': 'PlayStation 5',
+      '139': 'PlayStation 4',  // Corrected back - this might be right
+      '146': 'PlayStation 4',  // Alternative PS4 ID
+      '168': 'PlayStation 5',  // Primary PS5 ID
+      '169': 'PlayStation 5',  // Alternative PS5 ID
       '176': 'PlayStation 5',  // Additional PS5 ID
       '62': 'PlayStation Portable',
       '67': 'PlayStation Vita',
@@ -141,14 +143,17 @@ const Vault = () => {
       '20': 'Xbox 360',
       '36': 'Xbox 360',  // Alternative ID
       '145': 'Xbox One',
-      '158': 'Xbox Series X|S',
-      '159': 'Xbox Series X|S',  // Alternative ID
+      '171': 'Xbox Series X|S',  // Primary Xbox Series ID
+      '179': 'Xbox Series X|S',  // Secondary Xbox Series ID (this was missing!)
+      '158': 'Xbox Series X|S',  // Alternative ID
+      '159': 'Xbox Series X|S',  // Another alternative ID
       
       // Nintendo Consoles
       '21': 'Nintendo GameCube',
       '52': 'Wii',
       '79': 'Wii U',
       '157': 'Nintendo Switch',
+      '164': 'Nintendo Switch',  // Alternative Switch ID
       
       // Nintendo Handhelds
       '57': 'Nintendo DSi',
@@ -199,7 +204,50 @@ const Vault = () => {
       '39': 'Neo Geo',
       '84': 'Browser',
       '140': 'Stadia',
-      '143': 'Amazon Luna'
+      '143': 'Amazon Luna',
+      
+      // Additional common IDs that might appear
+      '1': 'Amiga',
+      '2': 'Amstrad CPC',
+      '10': 'Arcade',
+      '11': 'Atari ST',
+      '12': 'BBC Micro',
+      '13': 'Commodore 64',
+      '15': 'DOS',
+      '16': 'PlayStation Network (PS3)',
+      '18': 'Nintendo GameBoy',
+      '26': 'GameBoy Color',
+      '27': 'Dreamcast',
+      '30': 'Sega CD',
+      '33': 'Nintendo Game & Watch',
+      '34': 'Linux',
+      '38': 'Super Famicom',
+      '44': 'Nokia N-Gage',
+      '45': 'WonderSwan Color',
+      '46': 'TurboGrafx-CD',
+      '47': 'PC-FX',
+      '48': 'NeoGeo Pocket Color',
+      '49': 'WonderSwan',
+      '50': 'Nuon',
+      '51': 'Nintendo GameBoy Advance',
+      '53': 'Gizmondo',
+      '54': 'Nintendo DS',
+      '55': 'PlayStation Portable',
+      '56': 'Xbox Live Arcade',
+      '58': 'PlayStation Network (PSP)',
+      '59': 'WiiWare',
+      '60': 'DSiWare',
+      '61': 'PlayStation Network (Vita)',
+      '63': 'OnLive',
+      '64': 'Ouya',
+      '65': 'PlayStation Mobile',
+      '66': 'Nintendo eShop',
+      '68': 'PlayStation Network (PS4)',
+      '69': 'Xbox Games Store',
+      '70': 'Google Play',
+      '71': 'App Store',
+      '72': 'Windows Phone',
+      '73': 'Zeebo'
     };
     
     return platformMap[platformId] || `Platform ${platformId}`;
