@@ -101,8 +101,8 @@ const Vault = () => {
         case 'console':
           // Sort by console name, but only if not filtering by specific console
           if (!selectedConsole) {
-            const consoleA = getPlatformName(a.platform_id, a.game?.platforms) || '';
-            const consoleB = getPlatformName(b.platform_id, b.game?.platforms) || '';
+            const consoleA = getPlatformNameFromId(a.platform_id) || `Platform ${a.platform_id}`;
+            const consoleB = getPlatformNameFromId(b.platform_id) || `Platform ${b.platform_id}`;
             return consoleA.localeCompare(consoleB);
           }
           return 0; // No additional sorting when filtering by specific console
@@ -115,53 +115,44 @@ const Vault = () => {
     setFilteredGames(filtered);
   }, [userGames, searchQuery, sortBy, selectedConsole, recentlyAddedDesc]);
 
-  // Helper function to get platform name from platform_id
-  const getPlatformName = (platformId, platforms) => {
+  // Helper function to get platform name from platform_id using a simple mapping
+  const getPlatformNameFromId = (platformId) => {
     if (!platformId) return '';
     if (platformId === 'not_listed') return 'Not Listed';
-    if (!platforms) return '';
-    const platform = platforms.find(p => p.guid === platformId || p.id === platformId);
-    return platform ? platform.name : '';
+    
+    // Common platform ID mappings - you can expand this list
+    const platformMap = {
+      '94': 'PC',
+      '35': 'PlayStation 3',
+      '36': 'Xbox 360',
+      '40': 'PlayStation 2',
+      '19': 'SNES',
+      '117': 'Nintendo 3DS',
+      '139': 'PlayStation 4',
+      '145': 'Xbox One',
+      '146': 'PlayStation 5',
+      '158': 'Nintendo Switch',
+      '159': 'Xbox Series X|S'
+    };
+    
+    return platformMap[platformId] || `Platform ${platformId}`;
   };
 
-  // Get unique consoles from user's games
+  // Get unique consoles from user's games based on selected platform_ids
   const getUniqueConsoles = () => {
     const consoles = new Map();
     
-    console.log('Debug: userGames length:', userGames.length);
+    console.log('Debug: Building console list from userGames');
     
-    userGames.forEach((userGame, index) => {
-      console.log(`Debug: userGame ${index}:`, {
-        platform_id: userGame.platform_id,
-        has_game: !!userGame.game,
-        has_platforms: !!userGame.game?.platforms,
-        platforms_length: userGame.game?.platforms?.length || 0
-      });
-      
-      if (userGame.platform_id) {
-        if (userGame.platform_id === 'not_listed') {
-          // Add "Not Listed" option
-          if (!consoles.has('not_listed')) {
-            consoles.set('not_listed', { 
-              guid: 'not_listed', 
-              id: 'not_listed', 
-              name: 'Not Listed', 
-              abbreviation: '' 
-            });
-            console.log('Debug: Added "Not Listed" to console map');
-          }
-        } else if (userGame.game?.platforms) {
-          const platform = userGame.game.platforms.find(p => 
-            p.guid === userGame.platform_id || p.id === userGame.platform_id
-          );
-          
-          console.log(`Debug: Found platform for ${userGame.platform_id}:`, platform);
-          
-          if (platform && !consoles.has(platform.guid || platform.id)) {
-            consoles.set(platform.guid || platform.id, platform);
-            console.log('Debug: Added platform to map:', platform.name);
-          }
-        }
+    userGames.forEach((userGame) => {
+      if (userGame.platform_id && !consoles.has(userGame.platform_id)) {
+        const platformName = getPlatformNameFromId(userGame.platform_id);
+        consoles.set(userGame.platform_id, { 
+          id: userGame.platform_id, 
+          name: platformName, 
+          abbreviation: '' 
+        });
+        console.log('Debug: Added console:', platformName, 'for ID:', userGame.platform_id);
       }
     });
     
@@ -171,7 +162,7 @@ const Vault = () => {
       if (b.name === 'Not Listed') return -1;
       return a.name.localeCompare(b.name);
     });
-    console.log('Debug: Final unique consoles:', result);
+    console.log('Debug: Final unique consoles:', result.map(c => c.name));
     return result;
   };
 
@@ -367,7 +358,7 @@ const Vault = () => {
                 >
                   <option value="">All Consoles</option>
                   {getUniqueConsoles().map(platform => (
-                    <option key={platform.guid || platform.id} value={platform.guid || platform.id}>
+                    <option key={platform.id} value={platform.id}>
                       {platform.name} {platform.abbreviation ? `(${platform.abbreviation})` : ''}
                     </option>
                   ))}
