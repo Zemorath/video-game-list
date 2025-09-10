@@ -120,19 +120,86 @@ const Vault = () => {
     if (!platformId) return '';
     if (platformId === 'not_listed') return 'Not Listed';
     
-    // Common platform ID mappings - you can expand this list
+    // Common platform ID mappings - comprehensive list
     const platformMap = {
+      // PC and Mac
       '94': 'PC',
-      '35': 'PlayStation 3',
-      '36': 'Xbox 360',
+      '17': 'Mac',
+      
+      // PlayStation
+      '22': 'PlayStation',
       '40': 'PlayStation 2',
-      '19': 'SNES',
-      '117': 'Nintendo 3DS',
+      '35': 'PlayStation 3',
       '139': 'PlayStation 4',
-      '145': 'Xbox One',
       '146': 'PlayStation 5',
-      '158': 'Nintendo Switch',
-      '159': 'Xbox Series X|S'
+      '176': 'PlayStation 5',  // Additional PS5 ID
+      '62': 'PlayStation Portable',
+      '67': 'PlayStation Vita',
+      
+      // Xbox
+      '32': 'Xbox',
+      '20': 'Xbox 360',
+      '36': 'Xbox 360',  // Alternative ID
+      '145': 'Xbox One',
+      '158': 'Xbox Series X|S',
+      '159': 'Xbox Series X|S',  // Alternative ID
+      
+      // Nintendo Consoles
+      '21': 'Nintendo GameCube',
+      '52': 'Wii',
+      '79': 'Wii U',
+      '157': 'Nintendo Switch',
+      
+      // Nintendo Handhelds
+      '57': 'Nintendo DSi',
+      '117': 'Nintendo 3DS',
+      '118': 'New Nintendo 3DS',
+      '4': 'Game Boy',
+      '5': 'Game Boy Color',
+      '7': 'Game Boy Advance',
+      '9': 'Nintendo DS',
+      
+      // Retro Nintendo
+      '3': 'Nintendo Entertainment System',
+      '19': 'Super Nintendo Entertainment System',
+      '23': 'Nintendo 64',
+      
+      // Sega
+      '8': 'Sega Genesis',
+      '29': 'Sega Saturn',
+      '37': 'Sega Dreamcast',
+      '42': 'Sega Master System',
+      '74': 'Sega Game Gear',
+      '77': 'Sega 32X',
+      
+      // Mobile
+      '96': 'iPhone',
+      '123': 'Android',
+      '129': 'iPad',
+      
+      // VR
+      '131': 'PlayStation VR',
+      '138': 'Oculus Rift',
+      '162': 'PlayStation VR2',
+      
+      // Steam
+      '137': 'Steam Deck',
+      
+      // Atari
+      '6': 'Atari 2600',
+      '28': 'Atari 5200',
+      '31': 'Atari 7800',
+      '43': 'Atari Lynx',
+      '24': 'Atari Jaguar',
+      
+      // Other
+      '14': 'TurboGrafx-16',
+      '25': 'TurboGrafx-CD',
+      '41': 'WonderSwan',
+      '39': 'Neo Geo',
+      '84': 'Browser',
+      '140': 'Stadia',
+      '143': 'Amazon Luna'
     };
     
     return platformMap[platformId] || `Platform ${platformId}`;
@@ -142,8 +209,6 @@ const Vault = () => {
   const getUniqueConsoles = () => {
     const consoles = new Map();
     
-    console.log('Debug: Building console list from userGames');
-    
     userGames.forEach((userGame) => {
       if (userGame.platform_id && !consoles.has(userGame.platform_id)) {
         const platformName = getPlatformNameFromId(userGame.platform_id);
@@ -152,7 +217,6 @@ const Vault = () => {
           name: platformName, 
           abbreviation: '' 
         });
-        console.log('Debug: Added console:', platformName, 'for ID:', userGame.platform_id);
       }
     });
     
@@ -162,7 +226,7 @@ const Vault = () => {
       if (b.name === 'Not Listed') return -1;
       return a.name.localeCompare(b.name);
     });
-    console.log('Debug: Final unique consoles:', result.map(c => c.name));
+    
     return result;
   };
 
