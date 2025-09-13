@@ -11,6 +11,8 @@ const SearchResults = () => {
   const [error, setError] = useState('');
   const [addedGames, setAddedGames] = useState(new Set()); // Track added games
   const [showConfirmation, setShowConfirmation] = useState({}); // Track confirmation animations
+  const [flippedCards, setFlippedCards] = useState(new Set()); // Track which cards are flipped
+  const [gameDetails, setGameDetails] = useState({}); // Store game details form data
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   
@@ -173,25 +175,50 @@ const SearchResults = () => {
     }
   }, [query, API_KEY, API_BASE_URL]);
 
-  const addToCollection = async (game) => {
+  // Handle card flip to show details form
+  const flipCard = (gameGuid) => {
+    setFlippedCards(prev => new Set([...prev, gameGuid]));
+    // Initialize form data for this game
+    if (!gameDetails[gameGuid]) {
+      setGameDetails(prev => ({
+        ...prev,
+        [gameGuid]: {
+          status: 'want_to_play',
+          rating: '',
+          hours_played: '',
+          platform_id: ''
+        }
+      }));
+    }
+  };
+
+  // Handle form input changes
+  const updateGameDetails = (gameGuid, field, value) => {
+    setGameDetails(prev => ({
+      ...prev,
+      [gameGuid]: {
+        ...prev[gameGuid],
+        [field]: value
+      }
+    }));
+  };
+
+  // Handle form submission with details
+  const submitGameWithDetails = async (game) => {
     if (!isAuthenticated()) {
       navigate('/login');
       return;
     }
-
+    
+    const details = gameDetails[game.guid] || {};
+    
     try {
-      console.log('Adding game to collection:', game);
-      
       let response;
       
-      // Check if this game came from our local database (has local id) or from Giant Bomb API
+      // Prepare game data with details
       if (game.id && typeof game.id === 'number') {
-        // Game is already in our database, use the simpler add endpoint
-        console.log('Using local database game with ID:', game.id);
-        response = await gamesAPI.addExistingGameToLibrary(game.guid, 'want_to_play');
+        response = await gamesAPI.addExistingGameToLibrary(game.guid, details.status || 'want_to_play');
       } else {
-        // Game came directly from Giant Bomb API, use add-external endpoint
-        console.log('Adding external game from Giant Bomb API');
         const gameData = {
           guid: game.guid,
           name: game.name,
@@ -199,17 +226,36 @@ const SearchResults = () => {
           original_release_date: game.original_release_date,
           image: game.image,
           platforms: game.platforms,
-          status: 'want_to_play'
+          status: details.status || 'want_to_play'
         };
         response = await gamesAPI.addGameToLibrary(gameData);
       }
       
       if (response.success) {
-        // Add to added games set
-        setAddedGames(prev => new Set([...prev, game.guid]));
+        // If we have additional details, update the game
+        if ((details.rating && details.rating !== '') || 
+            (details.hours_played && details.hours_played !== '') || 
+            (details.platform_id && details.platform_id !== '')) {
+          
+          const updateData = {
+            status: details.status || 'want_to_play',
+            rating: details.rating ? parseInt(details.rating) : null,
+            hours_played: details.hours_played ? parseFloat(details.hours_played) : null,
+            platform_id: details.platform_id || null
+          };
+          
+          // Update the game with additional details
+          await gamesAPI.updateUserGame(response.user_game.id, updateData);
+        }
         
-        // Show confirmation animation
+        // Mark as added and show confirmation
+        setAddedGames(prev => new Set([...prev, game.guid]));
         setShowConfirmation(prev => ({ ...prev, [game.guid]: true }));
+        setFlippedCards(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(game.guid);
+          return newSet;
+        });
         
         // Hide confirmation after animation
         setTimeout(() => {
@@ -219,14 +265,21 @@ const SearchResults = () => {
         alert(response.message || 'Failed to add game to collection');
       }
     } catch (error) {
-      console.error('Error adding game to collection:', error);
-      if (error.response?.data?.message) {
-        alert(error.response.data.message);
-      } else {
-        alert('Failed to add game to collection');
-      }
+      console.error('Error adding game with details:', error);
+      alert('Failed to add game to collection');
     }
   };
+
+  // Cancel card flip
+  const cancelFlip = (gameGuid) => {
+    setFlippedCards(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(gameGuid);
+      return newSet;
+    });
+  };
+
+
 
   const viewGameDetail = (game) => {
     navigate(`/game/${game.guid}`);
@@ -321,68 +374,160 @@ const SearchResults = () => {
                   </div>
                 )}
                 
-                <div className="aspect-square bg-dark-secondary relative overflow-hidden">
-                  {game.image ? (
-                    <img
-                      src={game.image.medium_url || game.image.small_url || game.image.thumb_url}
-                      alt={game.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                      onError={(e) => {
-                        e.target.src = game.image.thumb_url;
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-500">
-                      <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                      </svg>
+                {!flippedCards.has(game.guid) ? (
+                  // Front of card - Game display
+                  <>
+                    <div className="aspect-square bg-dark-secondary relative overflow-hidden">
+                      {game.image ? (
+                        <img
+                          src={game.image.medium_url || game.image.small_url || game.image.thumb_url}
+                          alt={game.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                          onError={(e) => {
+                            e.target.src = game.image.thumb_url;
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                          <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                          </svg>
+                        </div>
+                      )}
+                      
+                      {/* Green checkmark for added games */}
+                      {addedGames.has(game.guid) && (
+                        <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1">
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
+                      
+                      {/* Hover overlay with actions */}
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-75 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => viewGameDetail(game)}
+                            className="bg-accent-primary hover:bg-accent-secondary text-white px-3 py-1 rounded-lg text-sm transition-colors"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => flipCard(game.guid)}
+                            disabled={addedGames.has(game.guid)}
+                            className={`px-3 py-1 rounded-lg text-sm transition-colors ${
+                              addedGames.has(game.guid)
+                                ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
+                                : 'bg-green-600 hover:bg-green-700 text-white'
+                            }`}
+                          >
+                            {addedGames.has(game.guid) ? 'Added' : 'Add'}
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  )}
-                  
-                  {/* Green checkmark for added games */}
-                  {addedGames.has(game.guid) && (
-                    <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1">
-                      <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
+                    
+                    <div className="p-3">
+                      <h3 className="text-white font-medium text-sm leading-tight line-clamp-2">
+                        {game.name}
+                      </h3>
+                      <p className="text-gray-400 text-xs mt-1">
+                        {game.original_release_date 
+                          ? new Date(game.original_release_date).getFullYear()
+                          : 'TBA'
+                        }
+                      </p>
                     </div>
-                  )}
-                  
-                  {/* Hover overlay with actions */}
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-75 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <div className="flex space-x-2">
+                  </>
+                ) : (
+                  // Back of card - Details form
+                  <div className="aspect-square bg-dark-secondary p-4 flex flex-col">
+                    <div className="flex-1 space-y-3">
+                      <h3 className="text-white font-medium text-sm leading-tight line-clamp-2 mb-2">
+                        {game.name}
+                      </h3>
+                      
+                      {/* Status dropdown */}
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Status</label>
+                        <select
+                          value={gameDetails[game.guid]?.status || 'want_to_play'}
+                          onChange={(e) => updateGameDetails(game.guid, 'status', e.target.value)}
+                          className="w-full bg-gray-700 text-white text-xs px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                        >
+                          <option value="want_to_play">Want to Play</option>
+                          <option value="playing">Playing</option>
+                          <option value="completed">Completed</option>
+                          <option value="collection">Collection</option>
+                          <option value="dropped">Dropped</option>
+                        </select>
+                      </div>
+                      
+                      {/* Rating input */}
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Rating (1-10)</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={gameDetails[game.guid]?.rating || ''}
+                          onChange={(e) => updateGameDetails(game.guid, 'rating', e.target.value)}
+                          className="w-full bg-gray-700 text-white text-xs px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                          placeholder="Optional"
+                        />
+                      </div>
+                      
+                      {/* Hours played input */}
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Hours</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.5"
+                          value={gameDetails[game.guid]?.hours_played || ''}
+                          onChange={(e) => updateGameDetails(game.guid, 'hours_played', e.target.value)}
+                          className="w-full bg-gray-700 text-white text-xs px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                          placeholder="Optional"
+                        />
+                      </div>
+                      
+                      {/* Platform dropdown */}
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Platform</label>
+                        <select
+                          value={gameDetails[game.guid]?.platform_id || ''}
+                          onChange={(e) => updateGameDetails(game.guid, 'platform_id', e.target.value)}
+                          className="w-full bg-gray-700 text-white text-xs px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                        >
+                          <option value="">Select Platform</option>
+                          {game.platforms?.map(platform => (
+                            <option key={platform.guid || platform.id} value={platform.guid || platform.id}>
+                              {platform.name} {platform.abbreviation ? `(${platform.abbreviation})` : ''}
+                            </option>
+                          ))}
+                          <option value="not_listed">Not Listed</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    {/* Action buttons */}
+                    <div className="flex space-x-2 mt-3">
                       <button
-                        onClick={() => viewGameDetail(game)}
-                        className="bg-accent-primary hover:bg-accent-secondary text-white px-3 py-1 rounded-lg text-sm transition-colors"
+                        onClick={() => submitGameWithDetails(game)}
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-xs transition-colors"
                       >
-                        View
+                        Submit
                       </button>
                       <button
-                        onClick={() => addToCollection(game)}
-                        disabled={addedGames.has(game.guid)}
-                        className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-                          addedGames.has(game.guid)
-                            ? 'bg-gray-500 text-gray-300 cursor-not-allowed'
-                            : 'bg-green-600 hover:bg-green-700 text-white'
-                        }`}
+                        onClick={() => cancelFlip(game.guid)}
+                        className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded text-xs transition-colors"
                       >
-                        {addedGames.has(game.guid) ? 'Added' : 'Add'}
+                        Cancel
                       </button>
                     </div>
                   </div>
-                </div>
-                
-                <div className="p-3">
-                  <h3 className="text-white font-medium text-sm leading-tight line-clamp-2">
-                    {game.name}
-                  </h3>
-                  <p className="text-gray-400 text-xs mt-1">
-                    {game.original_release_date 
-                      ? new Date(game.original_release_date).getFullYear()
-                      : 'TBA'
-                    }
-                  </p>
-                </div>
+                )}
               </div>
             ))}
           </div>
