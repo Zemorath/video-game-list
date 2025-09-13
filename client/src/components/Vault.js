@@ -508,7 +508,7 @@ const Vault = () => {
           </div>
         </div>
       ) : viewMode === 'cards' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
           {filteredGames.map((userGame) => {
             // Get image URL from userGame directly or fallback to game data
             const imageUrl = userGame.image_url || 
@@ -563,8 +563,8 @@ const Vault = () => {
                   )}
                 </div>
                 
-                <div className="p-4">
-                  <h3 className="text-white font-medium text-sm leading-tight line-clamp-2 mb-3">
+                <div className="p-2 sm:p-4">
+                  <h3 className="text-white font-medium text-xs sm:text-sm leading-tight line-clamp-2 mb-2 sm:mb-3">
                     {userGame.game?.name || 'Unknown Game'}
                   </h3>
                   
@@ -724,7 +724,7 @@ const Vault = () => {
                   
                   {/* Game details */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-white font-medium text-lg mb-1 truncate">
+                    <h3 className="text-white font-medium text-sm sm:text-lg mb-1 truncate">
                       {userGame.game?.name || 'Unknown Game'}
                     </h3>
                     <div className="flex items-center space-x-4 text-sm text-gray-400">

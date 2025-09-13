@@ -359,7 +359,7 @@ const SearchResults = () => {
             </div>
           </div>
         ) : games.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
             {games.map((game) => (
               <div
                 key={game.guid}
@@ -367,8 +367,8 @@ const SearchResults = () => {
               >
                 {/* Added confirmation popup */}
                 {showConfirmation[game.guid] && (
-                  <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-20 animate-bounce-in">
-                    <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
+                  <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-50 animate-bounce-in pointer-events-none">
+                    <div className="bg-green-500 text-white px-3 py-2 rounded-full text-sm font-medium shadow-xl border-2 border-white">
                       Added!
                     </div>
                   </div>
@@ -428,8 +428,8 @@ const SearchResults = () => {
                       </div>
                     </div>
                     
-                    <div className="p-3">
-                      <h3 className="text-white font-medium text-sm leading-tight line-clamp-2">
+                    <div className="p-2 sm:p-3">
+                      <h3 className="text-white font-medium text-xs sm:text-sm leading-tight line-clamp-2">
                         {game.name}
                       </h3>
                       <p className="text-gray-400 text-xs mt-1">
@@ -442,9 +442,9 @@ const SearchResults = () => {
                   </>
                 ) : (
                   // Back of card - Details form
-                  <div className="aspect-square bg-dark-secondary p-4 flex flex-col">
-                    <div className="flex-1 space-y-3">
-                      <h3 className="text-white font-medium text-sm leading-tight line-clamp-2 mb-2">
+                  <div className="aspect-square bg-dark-secondary p-2 sm:p-4 flex flex-col">
+                    <div className="flex-1 space-y-2 sm:space-y-3">
+                      <h3 className="text-white font-medium text-xs sm:text-sm leading-tight line-clamp-2 mb-1 sm:mb-2">
                         {game.name}
                       </h3>
                       
@@ -454,7 +454,7 @@ const SearchResults = () => {
                         <select
                           value={gameDetails[game.guid]?.status || 'want_to_play'}
                           onChange={(e) => updateGameDetails(game.guid, 'status', e.target.value)}
-                          className="w-full bg-gray-700 text-white text-xs px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                          className="w-full bg-gray-700 text-white text-xs px-1 sm:px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
                         >
                           <option value="want_to_play">Want to Play</option>
                           <option value="playing">Playing</option>
@@ -473,7 +473,7 @@ const SearchResults = () => {
                           max="10"
                           value={gameDetails[game.guid]?.rating || ''}
                           onChange={(e) => updateGameDetails(game.guid, 'rating', e.target.value)}
-                          className="w-full bg-gray-700 text-white text-xs px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                          className="w-full bg-gray-700 text-white text-xs px-1 sm:px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
                           placeholder="Optional"
                         />
                       </div>
@@ -487,7 +487,7 @@ const SearchResults = () => {
                           step="0.5"
                           value={gameDetails[game.guid]?.hours_played || ''}
                           onChange={(e) => updateGameDetails(game.guid, 'hours_played', e.target.value)}
-                          className="w-full bg-gray-700 text-white text-xs px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                          className="w-full bg-gray-700 text-white text-xs px-1 sm:px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
                           placeholder="Optional"
                         />
                       </div>
@@ -498,7 +498,7 @@ const SearchResults = () => {
                         <select
                           value={gameDetails[game.guid]?.platform_id || ''}
                           onChange={(e) => updateGameDetails(game.guid, 'platform_id', e.target.value)}
-                          className="w-full bg-gray-700 text-white text-xs px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
+                          className="w-full bg-gray-700 text-white text-xs px-1 sm:px-2 py-1 rounded border border-gray-600 focus:border-blue-500 focus:outline-none"
                         >
                           <option value="">Select Platform</option>
                           {game.platforms?.map(platform => (
@@ -512,16 +512,16 @@ const SearchResults = () => {
                     </div>
                     
                     {/* Action buttons */}
-                    <div className="flex space-x-2 mt-3">
+                    <div className="flex space-x-1 sm:space-x-2 mt-2 sm:mt-3">
                       <button
                         onClick={() => submitGameWithDetails(game)}
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-xs transition-colors"
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white px-2 sm:px-3 py-1 sm:py-2 rounded text-xs transition-colors"
                       >
                         Submit
                       </button>
                       <button
                         onClick={() => cancelFlip(game.guid)}
-                        className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded text-xs transition-colors"
+                        className="flex-1 bg-gray-600 hover:bg-gray-700 text-white px-2 sm:px-3 py-1 sm:py-2 rounded text-xs transition-colors"
                       >
                         Cancel
                       </button>
