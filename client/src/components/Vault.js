@@ -703,8 +703,101 @@ const Vault = () => {
             const isEditing = editingGame === userGame.id;
             
             return (
-              <div key={userGame.id} className="bg-card-bg rounded-xl p-4 hover:bg-hover-gray transition-all duration-200">
-                <div className="flex items-center space-x-4">
+              <div key={userGame.id} className="bg-card-bg rounded-xl p-3 sm:p-4 hover:bg-hover-gray transition-all duration-200">
+                {/* Mobile layout - stacked */}
+                <div className="flex sm:hidden">
+                  <div className="flex space-x-3 flex-1">
+                    {/* Game image */}
+                    <div className="w-12 h-16 bg-dark-secondary rounded-lg overflow-hidden flex-shrink-0">
+                      {userGame.image_url || userGame.game?.image?.thumb_url ? (
+                        <img 
+                          src={userGame.image_url || userGame.game?.image?.thumb_url} 
+                          alt={userGame.game?.name || 'Game'}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Game details */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-white font-medium text-sm mb-1 truncate">
+                        {userGame.game?.name || 'Unknown Game'}
+                      </h3>
+                      <div className="text-xs text-gray-400 mb-2">
+                        {userGame.game?.original_release_date 
+                          ? new Date(userGame.game.original_release_date).getFullYear()
+                          : 'TBA'
+                        }
+                      </div>
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          userGame.status === 'completed' ? 'bg-green-900 text-green-300' :
+                          userGame.status === 'playing' ? 'bg-blue-900 text-blue-300' :
+                          userGame.status === 'want_to_play' ? 'bg-yellow-900 text-yellow-300' :
+                          userGame.status === 'dropped' ? 'bg-red-900 text-red-300' :
+                          userGame.status === 'collection' ? 'bg-purple-900 text-purple-300' :
+                          'bg-gray-900 text-gray-300'
+                        }`}>
+                          {userGame.status === 'want_to_play' ? 'Want to Play' :
+                           userGame.status === 'playing' ? 'Playing' :
+                           userGame.status === 'completed' ? 'Completed' :
+                           userGame.status === 'dropped' ? 'Dropped' :
+                           userGame.status === 'collection' ? 'Collection' : userGame.status}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-xs text-gray-400">
+                        <span>
+                          {userGame.rating ? `⭐ ${userGame.rating}/10` : 'No rating'}
+                        </span>
+                        <span>
+                          {userGame.hours_played ? `🕒 ${userGame.hours_played}h` : 'No time'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Action buttons - mobile */}
+                  {!isEditing ? (
+                    <div className="flex flex-col space-y-1 ml-2">
+                      <button
+                        onClick={() => startEditing(userGame)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-xs transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => removeGame(userGame.id)}
+                        className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-xs transition-colors"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col space-y-1 ml-2">
+                      <button
+                        onClick={() => saveEdit(userGame.id)}
+                        className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-xs transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={cancelEditing}
+                        className="bg-gray-600 hover:bg-gray-700 text-white px-2 py-1 rounded text-xs transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Desktop layout - horizontal */}
+                <div className="hidden sm:flex items-center space-x-4">
                   {/* Game image */}
                   <div className="w-16 h-20 bg-dark-secondary rounded-lg overflow-hidden flex-shrink-0">
                     {userGame.image_url || userGame.game?.image?.thumb_url ? (
@@ -724,7 +817,7 @@ const Vault = () => {
                   
                   {/* Game details */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-white font-medium text-sm sm:text-lg mb-1 truncate">
+                    <h3 className="text-white font-medium text-lg mb-1 truncate">
                       {userGame.game?.name || 'Unknown Game'}
                     </h3>
                     <div className="flex items-center space-x-4 text-sm text-gray-400">
@@ -757,7 +850,7 @@ const Vault = () => {
                     </div>
                   </div>
                   
-                  {/* Action buttons */}
+                  {/* Action buttons - desktop */}
                   {!isEditing ? (
                     <div className="flex space-x-2">
                       <button
